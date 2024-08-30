@@ -7,6 +7,8 @@ namespace VaniaPlatformer;
 
 public class MainGame : Game
 {
+
+    // Properties
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private AnimationManager _animManager = new AnimationManager();
