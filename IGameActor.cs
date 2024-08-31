@@ -1,12 +1,18 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace VaniaPlatformer;
 
 public interface IGameActor {
-    Vector2 Position;
-    Vector2 Velocity;
-    Rectangle CollisionRectangle;
+    // Events
+    event EventHandler HasCollided;
 
+    // Properties
+    Vector2 Position { get;}
+    Vector2 Velocity { get; }
+    Rectangle BoundingBox { get; }
+
+    // Methods
     void Update(GameTime gameTime);
     void MoveAndSlide();
 }

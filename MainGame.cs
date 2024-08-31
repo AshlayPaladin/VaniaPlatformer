@@ -13,6 +13,7 @@ public class MainGame : Game
     private SpriteBatch _spriteBatch;
     private AnimationManager _animManager = new AnimationManager();
     private Rectangle _testRect = new Rectangle(100, 100, 48, 48);
+    private Player _testPlayer;
 
     public MainGame()
     {
@@ -24,6 +25,7 @@ public class MainGame : Game
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
+        
         base.Initialize();
     }
 
@@ -33,9 +35,8 @@ public class MainGame : Game
 
         // TODO: use this.Content to load your game content here
         Texture2D charSheet = this.Content.Load<Texture2D>("textures/Tralia");
-        Animation animation = new Animation(Common.AnimationIndex.Idle, charSheet, new Vector2(0,0), new Vector2(48,48), 3, 0.35f, true);
-        _animManager.AddAnimation(animation.Index, animation);
-        _animManager.Play(Common.AnimationIndex.Idle);
+        _testPlayer = new Player(charSheet, 48, 48, 500, 150);
+
     }
 
     protected override void Update(GameTime gameTime)
@@ -44,7 +45,7 @@ public class MainGame : Game
             Exit();
 
         // TODO: Add your update logic here
-        _animManager.Update(gameTime);
+        _testPlayer.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -56,7 +57,7 @@ public class MainGame : Game
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
 
-        _animManager.Draw(_spriteBatch, _testRect, Color.White);
+        _testPlayer.Draw(_spriteBatch);
         base.Draw(gameTime);
 
         _spriteBatch.End();
