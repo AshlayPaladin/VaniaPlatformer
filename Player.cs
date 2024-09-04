@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,10 +12,18 @@ public class Player : Actor {
     // Constants
     private const string ANIM_KEY_IDLE = "Idle";
 
+    // Events
+    public event EventHandler<MoveEventArgs> IsMoving;
+
     // Fields
     private string textureSheetId;
     private Rectangle boundingBox;
     private float moveSpeed;
+    private float jumpSpeed;
+    private float maxFallSpeed;
+    private float gravity;
+    List<Rectangle> collisions;
+    bool onGround;
 
     // Properties 
     private AnimationManager animationManager;
@@ -23,10 +32,16 @@ public class Player : Actor {
     // Constructors
     public Player(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0) {
         
+        collisions = new List<Rectangle>();
         textureSheetId = "textures/AdventurerSheet";
         animationManager = new AnimationManager();
         boundingSize = new Vector2(collisionWidth,collisionHeight);
         moveSpeed = 128.0f;
+        jumpSpeed = 256.0f;
+        onGround = false;
+
+        gravity = 0.35f;
+        maxFallSpeed = 128.0f;
 
         Colliders = new List<Rectangle>{ boundingBox };
         Position = new Vector2(startX,startY);
@@ -62,6 +77,17 @@ public class Player : Actor {
     public override void Update() {
         KeyboardState keyboardState = Keyboard.GetState();
 
+        if(!onGround) {
+            // Add Gravity
+            float currentFallSpeed = Velocity.Y;
+
+            if(currentFallSpeed < maxFallSpeed) {
+                currentFallSpeed += gravity;
+
+                Velocity = new Vector2(Velocity.X, currentFallSpeed);
+            }
+        }
+
         if(keyboardState.IsKeyDown(Keys.A)) {
             float velocityX = (Velocity.X - moveSpeed) * (float)Globals.DeltaTime;
 
@@ -72,6 +98,18 @@ public class Player : Actor {
             float velocityX = (Velocity.X + moveSpeed) * (float)Globals.DeltaTime;
 
             Velocity = new Vector2(velocityX, Velocity.Y);
+        }
+
+        if(keyboardState.IsKeyUp(Keys.A) && keyboardState.IsKeyUp(Keys.D)) {
+            Velocity = new Vector2(0, Velocity.Y);
+        }
+
+        if(keyboardState.IsKeyDown(Keys.W) && onGround) {
+            float jumpVelocity = -(jumpSpeed * (float)Globals.DeltaTime);
+
+            Velocity = new Vector2(Velocity.X, jumpVelocity);
+            
+            onGround = false;
         }
 
         if((int)Velocity.X == 0) {
@@ -88,15 +126,60 @@ public class Player : Actor {
 
     public override void MoveAndSlide()
     {
-        if(Velocity != Vector2.Zero) {
+        if(Velocity.X != 0 || Velocity.Y != 0) {
             int proposedX = (int)(Position.X + Velocity.X);
             int proposedY = (int)(Position.Y + Velocity.Y);
+            Vector2 proposedPosition = new Vector2(proposedX, proposedY);
 
-            // <Todo: Propose Position and Check for Collisions Here!>
+            OnMoving(this, new MoveEventArgs(
+                proposedPosition,
+                new Rectangle(
+                    (int)proposedPosition.X,
+                    (int)proposedPosition.Y,
+                    boundingBox.Width,
+                    boundingBox.Height
+                )));
+            
+            // Iterate through all Collisions and Correct ProposedPosition
+            if(collisions.Count > 0) {
+                foreach(Rectangle collision in collisions) {
+                    if(collision.Height > collision.Width) {
+                        if(collision.Left == boundingBox.Left) {
+                            // Collision is on our LEFT side
+                            float collisionProposedX = proposedPosition.X + collision.Width;
 
-            Position = new Vector2(proposedX, proposedY);
+                            proposedPosition = new Vector2(collisionProposedX, proposedPosition.Y);
+                        } 
+                        else if (collision.Right == boundingBox.Right) {
+                            // Collision is on our RIGHT side
+                            float collisionProposedX = proposedPosition.X - collision.Width;
 
-            Velocity = new Vector2(0,0);
+                            proposedPosition = new Vector2(collisionProposedX, proposedPosition.Y);
+                        }
+                    }
+                    else {
+                        if(collision.Bottom == boundingBox.Bottom) {
+                            // Collision is BELOW Player
+                            float collisionProposedY = proposedPosition.Y - collision.Height;
+
+                            proposedPosition = new Vector2(proposedPosition.X, collisionProposedY);
+
+                            onGround = true;
+                        }
+                        else if (collision.Top == boundingBox.Top) {
+                            // Collision is ABOVE Player
+                            float collisionProposedY = proposedPosition.Y + collision.Height;
+
+                            proposedPosition = new Vector2(proposedPosition.X, collisionProposedY);
+                        }
+                    }
+                }
+
+                Velocity = new Vector2(0,0);
+                collisions.Clear();
+            }
+
+            Position = new Vector2(proposedPosition.X, proposedPosition.Y);
 
             UpdateBoundingBox();
         }
@@ -108,5 +191,13 @@ public class Player : Actor {
             (int)Position.Y, 
             (int)boundingSize.X,
             (int)boundingSize.Y);
+    }
+
+    protected void OnMoving(object o, MoveEventArgs args) {
+        IsMoving?.Invoke(this, args);
+    } 
+
+    public void AddCollision(Rectangle collision) {
+        collisions.Add(collision);
     }
 }
