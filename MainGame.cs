@@ -23,7 +23,7 @@ public class MainGame : Game
     {
         // TODO: Add your initialization logic here
         
-        Common.InitializeCommon(Content);
+        Globals.InitializeGlobals(Content);
 
         _testPlayer = new Player(50, 37, 500, 150);
 
@@ -38,11 +38,12 @@ public class MainGame : Game
 
     protected override void Update(GameTime gameTime)
     {
+        Globals.Update(gameTime);
+
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        // TODO: Add your update logic here
-        _testPlayer.Update(gameTime);
+        _testPlayer.Update();
 
         base.Update(gameTime);
     }

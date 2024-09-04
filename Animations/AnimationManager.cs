@@ -7,7 +7,7 @@ namespace VaniaPlatformer.Animations;
 public class AnimationManager {
     
     // Fields
-    private List<Animation> animations;
+    private Dictionary<string,Animation> animationDictionary;
     private Animation activeAnimation;
     private float animationTimer;
     private bool playbackIsPaused;
@@ -17,32 +17,28 @@ public class AnimationManager {
 
     // Constructors
     public AnimationManager() {
-        animations = new List<Animation>();
+        animationDictionary = new Dictionary<string,Animation>();
         activeAnimation = null;
         animationTimer = 0;
         playbackIsPaused = false;
     }
 
     // Methods
-    public void AddAnimation(Common.AnimationIndex index, Animation animation) {
-        for(int i = 0; i < animations.Count; i++) {
-            if(animations[i].Index == index) {
-                animations[i] = animation;
-                return;
-            }
+    public void AddAnimation(string name, Animation animation) {
+        if(animationDictionary.ContainsKey(name)) {
+            animationDictionary[name] = animation;
         }
-
-        animations.Add(animation);
+        else {
+            animationDictionary.Add(name,animation);
+        }
     }
 
-    public void Play(Common.AnimationIndex index) {
-        foreach(Animation a in animations) {
-            if(a.Index == index) {
-                activeAnimation = a;
-                animationTimer = a.FrameTime;
+    public void Play(string name) {
+        if(animationDictionary.ContainsKey(name)) {
+                activeAnimation = animationDictionary[name];
+                animationTimer = activeAnimation.FrameTime;
                 return;
             }
-        }
     }
 
     public void Play() {
@@ -59,10 +55,10 @@ public class AnimationManager {
         playbackIsPaused = true;
     }
 
-    public void Update(GameTime gameTime) {
-        if (activeAnimation != null) {
+    public void Update() {
+        if (activeAnimation != null && !playbackIsPaused) {
             if(animationTimer > 0) {
-                animationTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                animationTimer -= (float)Globals.DeltaTime;
             }
             else {
                 activeAnimation.NextFrame();

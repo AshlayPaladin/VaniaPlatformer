@@ -6,7 +6,6 @@ namespace VaniaPlatformer.Animations;
 public class Animation {
 
     // Fields
-    private Common.AnimationIndex animationIndex;
     private Texture2D texture;
     private Vector2 framePosition;
     private Vector2 frameSize;
@@ -17,9 +16,6 @@ public class Animation {
     private bool isReverseAnimating;
 
     // Properties
-    public Common.AnimationIndex Index { 
-        get { return animationIndex; } 
-    }
     public Texture2D Texture {
         get { return texture; }
     }
@@ -42,8 +38,7 @@ public class Animation {
 
 
     // Constructor
-    public Animation(Common.AnimationIndex animationIndex, Texture2D texture, Vector2 framePosition, Vector2 frameSize, int frameCount, float frameTime = 30.0f, bool reverseOnEnd = false) {
-        this.animationIndex = animationIndex;
+    public Animation(Texture2D texture, Vector2 framePosition, Vector2 frameSize, int frameCount, float frameTime = 30.0f, bool reverseOnEnd = false) {
         this.texture = texture;
         this.framePosition = framePosition;
         this.frameSize = frameSize;

@@ -1,46 +1,23 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
-using System.Collections.Generic;
 
 namespace VaniaPlatformer;
 
-public static class Common {
-    
-    // Enums
-    public enum AnimationIndex {
-        Idle,
-        Walk,
-        Run,
-        Jump,
-        Fall,
-        Swing,
-        Throw,
-        Cast,
-        Hurt,
-        Die
-    }
+public static class Globals {
+
+    // Fields
+
 
     // Properties & Collections
-    private static List<TextureRef> textureRefs = new List<TextureRef>();
+    public static ContentManager Content;
+    public static double DeltaTime;
 
-    public static void InitializeCommon(ContentManager content) {
-        InitializeTextureRefLibrary(content);
+    // Methods
+    public static void InitializeGlobals(ContentManager content) {
+        Content = content;
     }
 
-    private static void InitializeTextureRefLibrary(ContentManager content) {
-        TextureRef testTextureRef = new TextureRef("PlayerSheet", "textures/AdventurerSheet", content);
-
-        textureRefs.Add(testTextureRef);
-    }
-
-    public static TextureRef GetTextureRefByID(string id) {
-        foreach(var textureRef in textureRefs) {
-            if(textureRef.ID == id) {
-                return textureRef;
-            }
-        }
-
-        return null;
+    public static void Update(GameTime gameTime) {
+        DeltaTime = gameTime.ElapsedGameTime.TotalSeconds;
     }
 }
