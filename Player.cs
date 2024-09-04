@@ -72,6 +72,7 @@ public class Player : Actor {
 
     public void Draw(SpriteBatch spriteBatch) {
         animationManager.Draw(spriteBatch, boundingBox, Color.White);
+        spriteBatch.Draw(Globals.DebugTexture, boundingBox, Color.Yellow * 0.5f);
     }
 
     public override void Update() {
@@ -143,14 +144,17 @@ public class Player : Actor {
             // Iterate through all Collisions and Correct ProposedPosition
             if(collisions.Count > 0) {
                 foreach(Rectangle collision in collisions) {
-                    if(collision.Height > collision.Width) {
-                        if(collision.Left == boundingBox.Left) {
+                    if(collision.Height >= collision.Width) {
+                        float leftDiff = Math.Abs(collision.Left - boundingBox.Left);
+                        float rightDiff = Math.Abs(collision.Right - boundingBox.Right);
+
+                        if(leftDiff <= rightDiff) {
                             // Collision is on our LEFT side
                             float collisionProposedX = proposedPosition.X + collision.Width;
 
                             proposedPosition = new Vector2(collisionProposedX, proposedPosition.Y);
                         } 
-                        else if (collision.Right == boundingBox.Right) {
+                        else if (rightDiff < leftDiff) {
                             // Collision is on our RIGHT side
                             float collisionProposedX = proposedPosition.X - collision.Width;
 
@@ -158,7 +162,10 @@ public class Player : Actor {
                         }
                     }
                     else {
-                        if(collision.Bottom == boundingBox.Bottom) {
+                        float topDiff = Math.Abs(collision.Top - boundingBox.Top);
+                        float bottomDiff = Math.Abs(collision.Bottom - boundingBox.Bottom);
+
+                        if(bottomDiff <= topDiff) {
                             // Collision is BELOW Player
                             float collisionProposedY = proposedPosition.Y - collision.Height;
 
@@ -166,7 +173,7 @@ public class Player : Actor {
 
                             onGround = true;
                         }
-                        else if (collision.Top == boundingBox.Top) {
+                        else if (topDiff < bottomDiff) {
                             // Collision is ABOVE Player
                             float collisionProposedY = proposedPosition.Y + collision.Height;
 
