@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using VaniaPlatformer.Animations;
 
 namespace VaniaPlatformer;
 
@@ -11,8 +10,6 @@ public class MainGame : Game
     // Properties
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private AnimationManager _animManager = new AnimationManager();
-    private Rectangle _testRect = new Rectangle(100, 100, 48, 48);
     private Player _testPlayer;
 
     public MainGame()
@@ -26,16 +23,16 @@ public class MainGame : Game
     {
         // TODO: Add your initialization logic here
         
+        Common.InitializeCommon(Content);
+
+        _testPlayer = new Player(50, 37, 500, 150);
+
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // TODO: use this.Content to load your game content here
-        Texture2D charSheet = this.Content.Load<Texture2D>("textures/Tralia");
-        _testPlayer = new Player(charSheet, 48, 48, 500, 150);
 
     }
 

@@ -5,33 +5,43 @@ using VaniaPlatformer.Animations;
 
 namespace VaniaPlatformer;
 
-public class Player : GameActor {
+public class Player : Actor {
     
+    // Fields
+    private string textureSheetId;
+    private TextureRef textureRef;
+    private Rectangle boundingBox;
+
     // Properties 
     private AnimationManager animationManager;
     private Vector2 boundingSize;
 
     // Constructors
-    public Player(Texture2D textureSheet, int collisionWidth, int collisionHeight, int startX = 0, int startY = 0) {
-        this.animationManager = new AnimationManager();
-        this.boundingSize = new Vector2(collisionWidth,collisionHeight);
+    public Player(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0) {
+        
+        textureSheetId = "PlayerSheet";
+        textureRef = Common.GetTextureRefByID(textureSheetId);
+        animationManager = new AnimationManager();
+        boundingSize = new Vector2(collisionWidth,collisionHeight);
 
         Position = new Vector2(startX,startY);
         Velocity = new Vector2(0,0);
-        BoundingBox = new Rectangle(
+        boundingBox = new Rectangle(
             (int)Position.X,
             (int)Position.Y, 
             (int)boundingSize.X,
             (int)boundingSize.Y);
 
-        InitializeAnimations(textureSheet);
+        Colliders.Add(boundingBox);
+
+        InitializeAnimations(textureRef.LoadTexture());
     }
 
     // Methods
     private void InitializeAnimations(Texture2D textureSheet) {
         var animations = new List<Animation>();
 
-        Animation idle = new Animation(Common.AnimationIndex.Idle, textureSheet, new Vector2(0,0), new Vector2(48,48), 3, 0.35f, true);
+        Animation idle = new Animation(Common.AnimationIndex.Idle, textureSheet, new Vector2(50,38), new Vector2(50,37), 6, 0.15f, false);
 
         animations.Add(idle);
 
@@ -43,7 +53,7 @@ public class Player : GameActor {
     }
 
     public void Draw(SpriteBatch spriteBatch) {
-        animationManager.Draw(spriteBatch, BoundingBox, Color.White);
+        animationManager.Draw(spriteBatch, boundingBox, Color.White);
     }
 
     public override void Update(GameTime gameTime) {
