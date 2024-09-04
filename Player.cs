@@ -90,15 +90,37 @@ public class Player : Actor {
         }
 
         if(keyboardState.IsKeyDown(Keys.A)) {
-            float velocityX = (Velocity.X - moveSpeed) * (float)Globals.DeltaTime;
+            Rectangle testLeftRect = new Rectangle((int)boundingBox.Left - 1, (int)Position.Y, 1, boundingBox.Height);
 
-            Velocity = new Vector2(velocityX, Velocity.Y);
+            OnMoving(this, new MoveEventArgs(new Vector2(testLeftRect.X, testLeftRect.Y), testLeftRect));
+
+            if(collisions.Count > 0) {
+                collisions.Clear();
+
+                Velocity = new Vector2(0, Velocity.Y);
+            } 
+            else {
+                float velocityX = (Velocity.X - moveSpeed) * (float)Globals.DeltaTime;
+
+                Velocity = new Vector2(velocityX, Velocity.Y);
+            }
         }
 
         if(keyboardState.IsKeyDown(Keys.D)) {
-            float velocityX = (Velocity.X + moveSpeed) * (float)Globals.DeltaTime;
+            Rectangle testRightRect = new Rectangle((int)boundingBox.Right + 1, (int)Position.Y, 1, boundingBox.Height);
 
-            Velocity = new Vector2(velocityX, Velocity.Y);
+            OnMoving(this, new MoveEventArgs(new Vector2(testRightRect.X, testRightRect.Y), testRightRect));
+
+            if(collisions.Count > 0) {
+                collisions.Clear();
+
+                Velocity = new Vector2(0, Velocity.Y);
+            } 
+            else {
+                float velocityX = (Velocity.X + moveSpeed) * (float)Globals.DeltaTime;
+
+                Velocity = new Vector2(velocityX, Velocity.Y);
+            }
         }
 
         if(keyboardState.IsKeyUp(Keys.A) && keyboardState.IsKeyUp(Keys.D)) {
@@ -178,6 +200,8 @@ public class Player : Actor {
                             float collisionProposedY = proposedPosition.Y + collision.Height;
 
                             proposedPosition = new Vector2(proposedPosition.X, collisionProposedY);
+
+                            onGround = false;
                         }
                     }
                 }
