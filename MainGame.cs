@@ -75,8 +75,8 @@ public class MainGame : Game
 
         List<TileMapLayer> _tileMapLayers = new List<TileMapLayer>{ layer1, layer2 };
 
-        TileMapBackground mountainBackground = new TileMapBackground(Content.Load<Texture2D>("textures/BackMountains"), Vector2.Zero, true, true, 75.0f, TileMapBackground.ParallaxDirection.Left);
-        TileMapBackground cloudBackground = new TileMapBackground(Content.Load<Texture2D>("textures/BackClouds"), Vector2.Zero, true, false, 125.0f, TileMapBackground.ParallaxDirection.Left);
+        TileMapBackground mountainBackground = new TileMapBackground(Content.Load<Texture2D>("textures/BackMountains"), Vector2.Zero, true, true, 35.0f, TileMapBackground.ParallaxDirection.Left);
+        TileMapBackground cloudBackground = new TileMapBackground(Content.Load<Texture2D>("textures/BackClouds"), Vector2.Zero, true, false, 50.0f, TileMapBackground.ParallaxDirection.Left);
 
         List<TileMapBackground> _tileMapBackgrounds = new List<TileMapBackground>() { mountainBackground, cloudBackground };
 

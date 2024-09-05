@@ -24,6 +24,7 @@ public class Player : Actor {
     private float gravity;
     List<Rectangle> collisions;
     bool onGround;
+    bool hasJumped;
 
     // Properties 
     private AnimationManager animationManager;
@@ -39,6 +40,7 @@ public class Player : Actor {
         moveSpeed = 128.0f;
         jumpSpeed = 256.0f;
         onGround = false;
+        hasJumped = true;
 
         gravity = 0.35f;
         maxFallSpeed = 128.0f;
@@ -78,6 +80,7 @@ public class Player : Actor {
     public override void Update() {
         KeyboardState keyboardState = Keyboard.GetState();
 
+        // Always apply Gravity if we are in the air
         if(!onGround) {
             // Add Gravity
             float currentFallSpeed = Velocity.Y;
@@ -89,6 +92,7 @@ public class Player : Actor {
             }
         }
 
+        // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
         if(keyboardState.IsKeyDown(Keys.A)) {
             Rectangle testLeftRect = new Rectangle((int)boundingBox.Left - 1, (int)Position.Y, 1, boundingBox.Height);
 
@@ -107,16 +111,22 @@ public class Player : Actor {
         }
 
         if(keyboardState.IsKeyDown(Keys.D)) {
+            // Create a test rectangle on right side of Player to check for SolidActors
             Rectangle testRightRect = new Rectangle((int)boundingBox.Right + 1, (int)Position.Y, 1, boundingBox.Height);
 
+            // Send out OnMoving event to trigger SolidActors to verify their position in relation to Player
             OnMoving(this, new MoveEventArgs(new Vector2(testRightRect.X, testRightRect.Y), Velocity, testRightRect));
 
+            // If any collisions with our TestRectangle were found, we are against a wall already
             if(collisions.Count > 0) {
+                // Clear the collisions, no need to handle them
+                // Then set horizontal velocity to 0, we will not move if there is a wall in our way
                 collisions.Clear();
 
                 Velocity = new Vector2(0, Velocity.Y);
             } 
             else {
+                // If no collisions are detected, we are free to begin moving
                 float velocityX = (Velocity.X + moveSpeed) * (float)Globals.DeltaTime;
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
@@ -127,14 +137,22 @@ public class Player : Actor {
             Velocity = new Vector2(0, Velocity.Y);
         }
 
+        // Check for Jump Key while On the Ground
         if(keyboardState.IsKeyDown(Keys.W) && onGround) {
             float jumpVelocity = -(jumpSpeed * (float)Globals.DeltaTime);
 
             Velocity = new Vector2(Velocity.X, jumpVelocity);
             
             onGround = false;
+            hasJumped = true;
         }
 
+        // End Jump Premature if Jump Key is Released before reaching max jump height
+        if(keyboardState.IsKeyUp(Keys.W) && !onGround && Velocity.Y < 0) {
+            Velocity = new Vector2(Velocity.X, 0);
+        }
+
+        // Stop Animation if there is no horizontal velocity
         if((int)Velocity.X == 0) {
             animationManager.Stop();
         }
@@ -142,8 +160,10 @@ public class Player : Actor {
             animationManager.Play();
         }
 
+        // Enter into movement method using Position and Velocity set previously
         MoveAndSlide();
 
+        // Update animation based on movement and other conditions
         animationManager.Update();
     }
 
