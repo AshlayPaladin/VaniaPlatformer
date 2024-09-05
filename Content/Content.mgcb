@@ -25,6 +25,30 @@
 /processorParam:TextureFormat=Color
 /build:textures/adventurer-v1.5-Sheet.png;textures/AdventurerSheet.png
 
+#begin textures/BackClouds.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/BackClouds.png
+
+#begin textures/BackMountains.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/BackMountains.png
+
 #begin textures/DebugPixel.png
 /importer:TextureImporter
 /processor:TextureProcessor

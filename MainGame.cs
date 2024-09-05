@@ -15,12 +15,11 @@ public class MainGame : Game
     private Player _testPlayer;
     private List<SolidActor> solidActors = new List<SolidActor>();
 
-    private Tileset _testTiles;
-    private Tilemap _testTilemap;
-    private int[][] _tilemap;
-    private int[][] _tilemap2;
-    private List<int[][]> _testTilemaps = new List<int[][]>();
+    private TileMap _testTilemap;
+
+    // Debug Fields
     private bool[] debugEnabled;
+    private bool tildePressed;
 
     public MainGame()
     {
@@ -42,10 +41,12 @@ public class MainGame : Game
         {
             false    // [0] show SolidActor collision masks
         }; 
+
+        tildePressed = false;
         
-        _testTiles = new Tileset(Content.Load<Texture2D>("textures/TestTiles"), 32);
+        Tileset _testTiles = new Tileset(Content.Load<Texture2D>("textures/TestTiles"), 32);
         
-        _tilemap = new int[10][];
+        int[][] _tilemap = new int[10][];
         _tilemap[0] = new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
         _tilemap[1] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
         _tilemap[2] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
@@ -57,7 +58,7 @@ public class MainGame : Game
         _tilemap[8] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
         _tilemap[9] = new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-        _tilemap2 = new int[10][];
+        int[][] _tilemap2 = new int[10][];
         _tilemap2[0] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         _tilemap2[1] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         _tilemap2[2] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -69,8 +70,15 @@ public class MainGame : Game
         _tilemap2[8] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         _tilemap2[9] = new int[] {0, 2, 2, 2, 2, 2, 2, 2, 2, 0};
 
-        _testTilemaps.Add(_tilemap);
-        _testTilemaps.Add(_tilemap2);
+        TileMapLayer layer1 = new TileMapLayer(_testTiles, _tilemap, 32, 320, 320);
+        TileMapLayer layer2 = new TileMapLayer(_testTiles, _tilemap2, 32, 320, 320);
+
+        List<TileMapLayer> _tileMapLayers = new List<TileMapLayer>{ layer1, layer2 };
+
+        TileMapBackground mountainBackground = new TileMapBackground(Content.Load<Texture2D>("textures/BackMountains"), Vector2.Zero, true, true, 75.0f, TileMapBackground.ParallaxDirection.Left);
+        TileMapBackground cloudBackground = new TileMapBackground(Content.Load<Texture2D>("textures/BackClouds"), Vector2.Zero, true, false, 125.0f, TileMapBackground.ParallaxDirection.Left);
+
+        List<TileMapBackground> _tileMapBackgrounds = new List<TileMapBackground>() { mountainBackground, cloudBackground };
 
         List<ObjectTile> objectTiles = new List<ObjectTile>() {
             new ObjectTile(ObjectTile.TileType.SolidActor, new Vector2(0, 0), new Vector2(320, 32), new List<string>()),
@@ -80,7 +88,7 @@ public class MainGame : Game
             new ObjectTile(ObjectTile.TileType.PlayerStart, new Vector2(100, 100), new Vector2(32, 64), new List<string>())
         };
 
-        _testTilemap = new Tilemap(_testTiles, 10, 10, 32, _testTilemaps, objectTiles);
+        _testTilemap = new TileMap(_testTiles, 10, 10, 32, _tileMapBackgrounds, _tileMapLayers, objectTiles);
 
         foreach(var o in _testTilemap.ObjectTiles) {
             if(o.Type == ObjectTile.TileType.PlayerStart) {
@@ -89,6 +97,12 @@ public class MainGame : Game
             else if (o.Type == ObjectTile.TileType.SolidActor) {
                 SolidActor newSolid = new SolidActor(o.TilePosition, (int)o.TileSize.X, (int)o.TileSize.Y);
                 solidActors.Add(newSolid);
+            }
+        }
+
+        foreach(var back in _testTilemap.TileMapBackgrounds) {
+            if(back.ParallaxWithPlayer) {
+                _testPlayer.IsMoving += back.OnPlayerMoved;
             }
         }
 
@@ -112,6 +126,19 @@ public class MainGame : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
+        if(Keyboard.GetState().IsKeyDown(Keys.LeftControl) && 
+        Keyboard.GetState().IsKeyDown(Keys.LeftShift) && 
+        Keyboard.GetState().IsKeyDown(Keys.OemTilde) &&
+        !tildePressed) {
+            debugEnabled[0] = !debugEnabled[0];
+            tildePressed = true;
+        }
+
+        if(Keyboard.GetState().IsKeyUp(Keys.OemTilde) && tildePressed) {
+            tildePressed = false;
+        }
+
+        _testTilemap.Update();
         _testPlayer.Update();
 
         base.Update(gameTime);

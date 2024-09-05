@@ -92,7 +92,7 @@ public class Player : Actor {
         if(keyboardState.IsKeyDown(Keys.A)) {
             Rectangle testLeftRect = new Rectangle((int)boundingBox.Left - 1, (int)Position.Y, 1, boundingBox.Height);
 
-            OnMoving(this, new MoveEventArgs(new Vector2(testLeftRect.X, testLeftRect.Y), testLeftRect));
+            OnMoving(this, new MoveEventArgs(new Vector2(testLeftRect.X, testLeftRect.Y), Velocity, testLeftRect));
 
             if(collisions.Count > 0) {
                 collisions.Clear();
@@ -109,7 +109,7 @@ public class Player : Actor {
         if(keyboardState.IsKeyDown(Keys.D)) {
             Rectangle testRightRect = new Rectangle((int)boundingBox.Right + 1, (int)Position.Y, 1, boundingBox.Height);
 
-            OnMoving(this, new MoveEventArgs(new Vector2(testRightRect.X, testRightRect.Y), testRightRect));
+            OnMoving(this, new MoveEventArgs(new Vector2(testRightRect.X, testRightRect.Y), Velocity, testRightRect));
 
             if(collisions.Count > 0) {
                 collisions.Clear();
@@ -156,6 +156,7 @@ public class Player : Actor {
 
             OnMoving(this, new MoveEventArgs(
                 proposedPosition,
+                Velocity,
                 new Rectangle(
                     (int)proposedPosition.X,
                     (int)proposedPosition.Y,
