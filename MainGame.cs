@@ -18,6 +18,9 @@ public class MainGame : Game
     private Tileset _testTiles;
     private Tilemap _testTilemap;
     private int[][] _tilemap;
+    private int[][] _tilemap2;
+    private List<int[][]> _testTilemaps = new List<int[][]>();
+    private bool[] debugEnabled;
 
     public MainGame()
     {
@@ -35,22 +38,39 @@ public class MainGame : Game
         
         Globals.InitializeGlobals(Content);
 
-        //_testPlayer = new Player(50, 37, 500, 150);
-
-        //solidActors.Add( new SolidActor(new Vector2(0, 400), 1280, 32) );
-        //solidActors.Add( new SolidActor(new Vector2(0, 0), 32, 720) );
-        //solidActors.Add( new SolidActor(new Vector2(1280 - 32, 0), 32, 720) );
-
+        debugEnabled = new bool[] 
+        {
+            false    // [0] show SolidActor collision masks
+        }; 
         
+        _testTiles = new Tileset(Content.Load<Texture2D>("textures/TestTiles"), 32);
+        
+        _tilemap = new int[10][];
+        _tilemap[0] = new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+        _tilemap[1] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[2] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[3] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[4] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[5] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[6] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[7] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[8] = new int[] {1, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+        _tilemap[9] = new int[] {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-        _testTiles = new Tileset(Content.Load<Texture2D>("textures/debugTileset"), 32);
-        _tilemap = new int[5][];
+        _tilemap2 = new int[10][];
+        _tilemap2[0] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[1] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[2] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[3] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[4] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[5] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[6] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[7] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[8] = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        _tilemap2[9] = new int[] {0, 2, 2, 2, 2, 2, 2, 2, 2, 0};
 
-        _tilemap[0] = new int[] {1, 1, 2, 5, 3};
-        _tilemap[1] = new int[] {4, 4, 4, 4, 4};
-        _tilemap[2] = new int[] {10, 11, 8, 9, 10};
-        _tilemap[3] = new int[] {16, 0, 0, 0, 5};
-        _tilemap[4] = new int[] {0, 1, 14, 11, 0};
+        _testTilemaps.Add(_tilemap);
+        _testTilemaps.Add(_tilemap2);
 
         List<ObjectTile> objectTiles = new List<ObjectTile>() {
             new ObjectTile(ObjectTile.TileType.SolidActor, new Vector2(0, 0), new Vector2(320, 32), new List<string>()),
@@ -60,7 +80,7 @@ public class MainGame : Game
             new ObjectTile(ObjectTile.TileType.PlayerStart, new Vector2(100, 100), new Vector2(32, 64), new List<string>())
         };
 
-        _testTilemap = new Tilemap(_testTiles, 5, 5, 32, _tilemap, objectTiles);
+        _testTilemap = new Tilemap(_testTiles, 10, 10, 32, _testTilemaps, objectTiles);
 
         foreach(var o in _testTilemap.ObjectTiles) {
             if(o.Type == ObjectTile.TileType.PlayerStart) {
@@ -104,13 +124,15 @@ public class MainGame : Game
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
 
+        _testTilemap.RenderMap(_spriteBatch);
+
         _testPlayer.Draw(_spriteBatch);
 
-        foreach(var solid in solidActors) {
-            solid.Draw(_spriteBatch);
+        if(debugEnabled[0]) {
+            foreach(var solid in solidActors) {
+                solid.Draw(_spriteBatch);
+            }
         }
-
-        _testTilemap.RenderMap(_spriteBatch);
 
         base.Draw(gameTime);
 
