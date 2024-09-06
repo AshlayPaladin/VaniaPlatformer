@@ -155,7 +155,7 @@ public class MainGame : Game
 
         _testPlayer.Draw(_spriteBatch);
 
-        if(debugEnabled[0]) {
+        if(debugEnabled[0] && solidActors.Count > 0) {
             foreach(var solid in solidActors) {
                 solid.Draw(_spriteBatch);
             }
