@@ -24,7 +24,6 @@ public class Player : Actor {
     private float gravity;
     List<Rectangle> collisions;
     bool onGround;
-    bool hasJumped;
 
     // Properties 
     private AnimationManager animationManager;
@@ -40,9 +39,8 @@ public class Player : Actor {
         moveSpeed = 128.0f;
         jumpSpeed = 256.0f;
         onGround = false;
-        hasJumped = true;
 
-        gravity = 0.35f;
+        gravity = 0.15f;
         maxFallSpeed = 128.0f;
 
         Colliders = new List<Rectangle>{ boundingBox };
@@ -144,7 +142,6 @@ public class Player : Actor {
             Velocity = new Vector2(Velocity.X, jumpVelocity);
             
             onGround = false;
-            hasJumped = true;
         }
 
         // End Jump Premature if Jump Key is Released before reaching max jump height
