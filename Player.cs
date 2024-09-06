@@ -18,6 +18,12 @@ public class Player : Actor {
     // Fields
     private string textureSheetId;
     private Rectangle boundingBox;
+    private Rectangle leftBoundingBox;
+    private Rectangle rightBoundingBox;
+    private Rectangle topBoundingBox;
+    private Rectangle bottomBoundingBox;
+    private float coyoteTime;
+    private float coyoteTimeReset;
     private float moveSpeed;
     private float jumpSpeed;
     private float maxFallSpeed;
@@ -36,12 +42,15 @@ public class Player : Actor {
         textureSheetId = "textures/AdventurerSheet";
         animationManager = new AnimationManager();
         boundingSize = new Vector2(collisionWidth,collisionHeight);
-        moveSpeed = 128.0f;
-        jumpSpeed = 256.0f;
+        moveSpeed = 200.0f;
+        jumpSpeed = 400.0f;
         onGround = false;
 
-        gravity = 0.15f;
+        gravity = 0.35f;
         maxFallSpeed = 128.0f;
+
+        coyoteTimeReset = 0.15f;
+        coyoteTime = coyoteTimeReset;
 
         Colliders = new List<Rectangle>{ boundingBox };
         Position = new Vector2(startX,startY);
@@ -72,7 +81,8 @@ public class Player : Actor {
 
     public void Draw(SpriteBatch spriteBatch) {
         animationManager.Draw(spriteBatch, boundingBox, Color.White);
-        spriteBatch.Draw(Globals.DebugTexture, boundingBox, Color.Yellow * 0.5f);
+        //spriteBatch.Draw(Globals.DebugTexture, boundingBox, Color.Yellow * 0.5f);
+        //spriteBatch.Draw(Globals.DebugTexture, bottomBoundingBox, Color.Red * 0.5f);
     }
 
     public override void Update() {
@@ -89,12 +99,40 @@ public class Player : Actor {
                 Velocity = new Vector2(Velocity.X, currentFallSpeed);
             }
         }
+        else {
+
+            OnMoving(this, new MoveEventArgs(new Vector2(bottomBoundingBox.X, bottomBoundingBox.Y), Velocity, bottomBoundingBox));
+
+            if(collisions.Count == 0) 
+            {
+                // Nothing below us, begin Coyote Time countdown before setting OnGround
+                if(coyoteTime > 0) {
+                    coyoteTime -= (float)Globals.DeltaTime;
+                }
+                else {
+                    onGround = false;
+                    coyoteTime = coyoteTimeReset;
+                }
+
+                // Begin falling immediately, but still be considered "onGround" so player can still jump
+                float currentFallSpeed = Velocity.Y;
+
+                if(currentFallSpeed < maxFallSpeed) {
+                    currentFallSpeed += gravity;
+
+                    Velocity = new Vector2(Velocity.X, currentFallSpeed);
+                }
+            }
+            else {
+                coyoteTime = coyoteTimeReset;
+                collisions.Clear();
+            }
+        }
 
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
         if(keyboardState.IsKeyDown(Keys.A)) {
-            Rectangle testLeftRect = new Rectangle((int)boundingBox.Left - 1, (int)Position.Y, 1, boundingBox.Height);
 
-            OnMoving(this, new MoveEventArgs(new Vector2(testLeftRect.X, testLeftRect.Y), Velocity, testLeftRect));
+            OnMoving(this, new MoveEventArgs(new Vector2(leftBoundingBox.X, leftBoundingBox.Y), Velocity, leftBoundingBox));
 
             if(collisions.Count > 0) {
                 collisions.Clear();
@@ -110,10 +148,10 @@ public class Player : Actor {
 
         if(keyboardState.IsKeyDown(Keys.D)) {
             // Create a test rectangle on right side of Player to check for SolidActors
-            Rectangle testRightRect = new Rectangle((int)boundingBox.Right + 1, (int)Position.Y, 1, boundingBox.Height);
+            //rightBoundingBox = new Rectangle((int)boundingBox.Right + 1, (int)Position.Y, 1, boundingBox.Height);
 
             // Send out OnMoving event to trigger SolidActors to verify their position in relation to Player
-            OnMoving(this, new MoveEventArgs(new Vector2(testRightRect.X, testRightRect.Y), Velocity, testRightRect));
+            OnMoving(this, new MoveEventArgs(new Vector2(rightBoundingBox.X, rightBoundingBox.Y), Velocity, rightBoundingBox));
 
             // If any collisions with our TestRectangle were found, we are against a wall already
             if(collisions.Count > 0) {
@@ -240,6 +278,24 @@ public class Player : Actor {
             (int)Position.Y, 
             (int)boundingSize.X,
             (int)boundingSize.Y);
+
+        bottomBoundingBox = new Rectangle(
+            (int)boundingBox.Left,
+            (int)boundingBox.Bottom + 1,
+            boundingBox.Width,
+            1);
+
+        rightBoundingBox = new Rectangle(
+            (int)boundingBox.Right + 1,
+            (int)Position.Y,
+            1,
+            boundingBox.Height);
+        
+        leftBoundingBox = new Rectangle(
+            (int)boundingBox.Left - 1, 
+            (int)Position.Y, 
+            1, 
+            boundingBox.Height);
     }
 
     protected void OnMoving(object o, MoveEventArgs args) {
