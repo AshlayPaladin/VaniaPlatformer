@@ -28,6 +28,8 @@ public class SolidActor : Actor {
             (int)Position.Y,
             Width,
             Height);
+
+        SetOrigin();
         
         Colliders = new List<Rectangle>() { boundingBox };
     }

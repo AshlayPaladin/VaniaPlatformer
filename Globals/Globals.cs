@@ -12,7 +12,7 @@ public static class Globals {
 
     // Properties & Collections
     public static ContentManager Content;
-    public static double DeltaTime;
+    public static float DeltaTime;
     public static Texture2D DebugTexture;
     public static Tileset ActiveTileset;
 
@@ -23,12 +23,22 @@ public static class Globals {
     }
 
     public static void Update(GameTime gameTime) {
-        DeltaTime = gameTime.ElapsedGameTime.TotalSeconds;
+        DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
     }
 
     public static void SetActiveTileset(TiledMapTileset tiledMapTileset) 
     {
         ActiveTileset = new Tileset(tiledMapTileset.Name, tiledMapTileset.Image, tiledMapTileset.Rows, tiledMapTileset.Columns, tiledMapTileset.FirstGid, tiledMapTileset.ImageWidth,
         tiledMapTileset.ImageHeight, tiledMapTileset.Margin, tiledMapTileset.Spacing, tiledMapTileset.TileWidth, tiledMapTileset.TileHeight, tiledMapTileset.TileCount);
+    }
+
+    public static Vector2 Lerp(Vector2 firstPosition, Vector2 secondPosition, float amount) {
+        float retX = Lerp(firstPosition.X, secondPosition.X, amount);
+        float retY = Lerp(firstPosition.Y, secondPosition.Y, amount);
+        return new Vector2(retX, retY);
+    }
+
+    public static float Lerp(float initial, float target, float amount) {
+        return initial * (1 - amount) + target * amount;
     }
 }

@@ -14,6 +14,7 @@ public class Player : Actor {
 
     // Events
     public event EventHandler<MoveEventArgs> IsMoving;
+    public event EventHandler<MoveEventArgs> FinishedMoving;
 
     // Fields
     private string textureSheetId;
@@ -58,6 +59,8 @@ public class Player : Actor {
         
         UpdateBoundingBox();
         Colliders.Add(boundingBox);
+
+        SetOrigin();
 
         InitializeAnimations();
     }
@@ -107,7 +110,7 @@ public class Player : Actor {
             {
                 // Nothing below us, begin Coyote Time countdown before setting OnGround
                 if(coyoteTime > 0) {
-                    coyoteTime -= (float)Globals.DeltaTime;
+                    coyoteTime -= Globals.DeltaTime;
                 }
                 else {
                     onGround = false;
@@ -140,7 +143,7 @@ public class Player : Actor {
                 Velocity = new Vector2(0, Velocity.Y);
             } 
             else {
-                float velocityX = (Velocity.X - moveSpeed) * (float)Globals.DeltaTime;
+                float velocityX = (Velocity.X - moveSpeed) * Globals.DeltaTime;
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
@@ -163,7 +166,7 @@ public class Player : Actor {
             } 
             else {
                 // If no collisions are detected, we are free to begin moving
-                float velocityX = (Velocity.X + moveSpeed) * (float)Globals.DeltaTime;
+                float velocityX = (Velocity.X + moveSpeed) * Globals.DeltaTime;
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
@@ -175,7 +178,7 @@ public class Player : Actor {
 
         // Check for Jump Key while On the Ground
         if(keyboardState.IsKeyDown(Keys.W) && onGround) {
-            float jumpVelocity = -(jumpSpeed * (float)Globals.DeltaTime);
+            float jumpVelocity = -(jumpSpeed * Globals.DeltaTime);
 
             Velocity = new Vector2(Velocity.X, jumpVelocity);
             
@@ -197,6 +200,9 @@ public class Player : Actor {
 
         // Enter into movement method using Position and Velocity set previously
         MoveAndSlide();
+
+        // Fire off FinishedMoving for listeners
+        OnFinishedMoving();
 
         // Update animation based on movement and other conditions
         animationManager.Update();
@@ -269,6 +275,7 @@ public class Player : Actor {
             Position = new Vector2(proposedPosition.X, proposedPosition.Y);
 
             UpdateBoundingBox();
+            Origin = new Vector2(boundingBox.X + (boundingBox.Width / 2), boundingBox.Y + (boundingBox.Height / 2));
         }
     }
 
@@ -298,11 +305,15 @@ public class Player : Actor {
             boundingBox.Height);
     }
 
+    public void AddCollision(Rectangle collision) {
+        collisions.Add(collision);
+    }
+    
     protected void OnMoving(object o, MoveEventArgs args) {
         IsMoving?.Invoke(this, args);
     } 
 
-    public void AddCollision(Rectangle collision) {
-        collisions.Add(collision);
+    protected void OnFinishedMoving() {
+        FinishedMoving?.Invoke(this, new MoveEventArgs(Position, Velocity, BoundingBox));
     }
 }

@@ -58,7 +58,7 @@ public class AnimationManager {
     public void Update() {
         if (activeAnimation != null && !playbackIsPaused) {
             if(animationTimer > 0) {
-                animationTimer -= (float)Globals.DeltaTime;
+                animationTimer -= Globals.DeltaTime;
             }
             else {
                 activeAnimation.NextFrame();

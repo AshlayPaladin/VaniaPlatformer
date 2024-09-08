@@ -18,6 +18,7 @@ public class MainGame : Game
     private List<SolidActor> solidActors = new List<SolidActor>();
 
     private TiledMap _testTilemap;
+    private Camera2D _camera;
 
     // Debug Fields
     private bool[] debugEnabled;
@@ -95,6 +96,8 @@ public class MainGame : Game
             }
         }
         
+        _camera = new Camera2D(_testPlayer, new Vector2(_testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileWidth), Vector2.Zero);
+        _testPlayer.FinishedMoving += _camera.OnTargetActorFinishedMoving;
 
         base.Initialize();
     }
@@ -124,8 +127,8 @@ public class MainGame : Game
             tildePressed = false;
         }
 
-        //_testTilemap.Update();
         _testPlayer.Update();
+        _camera.Update();
 
         base.Update(gameTime);
     }
@@ -135,10 +138,9 @@ public class MainGame : Game
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // TODO: Add your drawing code here
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(transformMatrix: _camera.TranslationMatrix);
 
         _testTilemap.RenderMap(_spriteBatch);
-
         _testPlayer.Draw(_spriteBatch);
 
         if(debugEnabled[0] && solidActors.Count > 0) {
@@ -146,6 +148,8 @@ public class MainGame : Game
                 solid.Draw(_spriteBatch);
             }
         }
+
+        _camera.Draw(_spriteBatch);
 
         base.Draw(gameTime);
 
