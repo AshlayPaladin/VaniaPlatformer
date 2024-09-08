@@ -36,6 +36,7 @@ public class MainGame : Game
         // TODO: Add your initialization logic here
         
         Globals.InitializeGlobals(Content);
+        Globals.GraphicsScreenSize = new Vector2(640, 320);
 
         debugEnabled = new bool[] 
         {
@@ -48,8 +49,10 @@ public class MainGame : Game
         string tiledMapJson = File.ReadAllText("../../../Content/tiledMaps/debugStage.json");
         _testTilemap = JsonConvert.DeserializeObject<TiledMap>(tiledMapJson);
 
-        _graphics.PreferredBackBufferWidth = _testTilemap.Width * _testTilemap.TileWidth;
-        _graphics.PreferredBackBufferHeight = _testTilemap.Height * _testTilemap.TileWidth;
+        //_graphics.PreferredBackBufferWidth = _testTilemap.Width * _testTilemap.TileWidth;
+        //_graphics.PreferredBackBufferHeight = _testTilemap.Height * _testTilemap.TileWidth;
+        _graphics.PreferredBackBufferWidth = 1920;
+        _graphics.PreferredBackBufferHeight = 1080;
         _graphics.ApplyChanges();
 
         Globals.SetActiveTileset(_testTilemap.TiledMapTilesets[0]);
@@ -96,8 +99,10 @@ public class MainGame : Game
             }
         }
         
-        _camera = new Camera2D(_testPlayer, new Vector2(_testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileWidth), Vector2.Zero);
-        _testPlayer.FinishedMoving += _camera.OnTargetActorFinishedMoving;
+        _camera = new Camera2D(_testPlayer, _testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileHeight);
+        _camera.ViewportWidth = _graphics.GraphicsDevice.Viewport.Width;
+        _camera.ViewportHeight = _graphics.GraphicsDevice.Viewport.Height;
+        //_testPlayer.FinishedMoving += _camera.OnTargetActorFinishedMoving;
 
         base.Initialize();
     }
@@ -149,7 +154,7 @@ public class MainGame : Game
             }
         }
 
-        _camera.Draw(_spriteBatch);
+        //_camera.Draw(_spriteBatch);
 
         base.Draw(gameTime);
 

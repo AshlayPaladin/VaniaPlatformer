@@ -15,6 +15,7 @@ public static class Globals {
     public static float DeltaTime;
     public static Texture2D DebugTexture;
     public static Tileset ActiveTileset;
+    public static Vector2 GraphicsScreenSize;
 
     // Methods
     public static void InitializeGlobals(ContentManager content) {

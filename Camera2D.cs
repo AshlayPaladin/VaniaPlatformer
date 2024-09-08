@@ -1,247 +1,133 @@
-using System;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+    using Microsoft.Xna.Framework;
 
-namespace VaniaPlatformer;
+    namespace VaniaPlatformer;
 
-public class Camera2D {
+    public class Camera2D {
 
-    // Fields
-    private Actor targetActor;
-    private Rectangle target;
-    private Vector2 targetOrigin;
-    private Vector2 tiledMapSize;
-    private Vector2 position;
-    private Vector2 origin;
-    private int cameraMargin;
-    private Vector2 viewportSize;
-    private float moveSpeed;
-    private Vector2 cameraVelocity;
-    private Matrix translationMatrix;
-    
-    private Rectangle verticalStillcamZone;
-    private Rectangle horizontalStillcamZone;
+        // Fields
+    private Actor target;
+    private Vector2 stageSize;
+    private float cameraMoveSpeed;
 
     // Properties
-    public Rectangle Target { get { return target; } protected set { target = value; } }
-    public Vector2 TiledMapSize { get { return tiledMapSize;} protected set { tiledMapSize = value;} }
-    public Vector2 Position { get { return position; } protected set { position = value; } }
-    public Vector2 Origin { get { return origin;} protected set { origin = value; } }
-    public Vector2 ViewportSize { get { return viewportSize; } protected set { viewportSize = value; } }
-    public float MoveSpeed { get { return moveSpeed; } protected set { moveSpeed = value; } }
-    public Rectangle VerticalStillcamZone { get { return verticalStillcamZone;} protected set { verticalStillcamZone = value;} } 
-    public Rectangle HorizontalStillcamZone { get { return horizontalStillcamZone; } protected set { horizontalStillcamZone = value; } }
-    public Matrix TranslationMatrix { get { return translationMatrix; } protected set { translationMatrix = value; } }
+    public Vector2 Position { get; private set; }
+    public float Zoom { get; private set; }
+    public float Rotation { get; private set; }
 
-    // Constructor
-    public Camera2D(Actor targetActor, Vector2 tiledMapSize) {
-        this.targetActor = targetActor;
-        this.target = targetActor.BoundingBox;
-        this.targetOrigin = new Vector2(target.Left + (target.Width / 2), target.Top + (target.Height / 2));
-        this.tiledMapSize = tiledMapSize;
-        this.position = Vector2.Zero;
-        this.viewportSize = new Vector2(360, 360);
-        this.origin = new Vector2(
-            (int)position.X + (int)(viewportSize.X / 2),
-            (int)position.Y + (int)(viewportSize.Y / 2)
-        );
-        this.moveSpeed = 96.0f;
-        this.cameraVelocity = Vector2.Zero;
-        this.cameraMargin = 4;
-        GenerateStillcamZones();
-        translationMatrix = CalculateTranslation();
+    // Width and Height of Viewport window which we need to adjust
+    // each time the player resizes the game window
+    public int ViewportWidth { get; set; }
+    public int ViewportHeight { get; set; }
+
+    // Center of the Viewport, not accounting for scale
+    public Vector2 ViewportCenter
+    {
+        get
+        {   
+            return new Vector2( ViewportWidth / 2, ViewportHeight / 2 );
+        }
     }
 
-    public Camera2D(Actor targetActor, Vector2 tiledMapSize, Vector2 position) {
-        this.targetActor = targetActor;
-        this.target = targetActor.BoundingBox;
-        this.targetOrigin = new Vector2(target.Left + (target.Width / 2), target.Top + (target.Height / 2));
-        this.tiledMapSize = tiledMapSize;
-        this.position = position;
-        this.viewportSize = new Vector2(360, 360);
-        this.origin = new Vector2(
-            (int)position.X + (int)(viewportSize.X / 2),
-            (int)position.Y + (int)(viewportSize.Y / 2)
-        );
-        this.moveSpeed = 96.0f;
-        this.cameraVelocity = Vector2.Zero;
-        GenerateStillcamZones();
-        this.cameraMargin = 4;
-        translationMatrix = CalculateTranslation();
+        // Transform Matrix to offset everything drawn
+        // since the camera Position is where the camera is,
+        // we offset everything by the negative of that to simulate
+        // a camera moving. We also cast INT to avoid artifacts
+    public Matrix TranslationMatrix
+    {
+        get
+        {
+            Position = MapClampedPosition( Position );
+
+            return Matrix.CreateTranslation( -(int) Position.X,
+                -(int) Position.Y, 0 ) *
+                Matrix.CreateRotationZ( Rotation ) *
+                Matrix.CreateScale( new Vector3( Zoom, Zoom, 1 ) ) *
+                Matrix.CreateTranslation( new Vector3( ViewportCenter, 0 ) );
+        }
     }
 
-    public Camera2D(Actor targetActor, Vector2 tiledMapSize, Vector2 position, Vector2 viewportSize, float moveSpeed, Rectangle verticalStillcamZone, Rectangle horizontalStillcamZone, int cameraMargin) {
-        this.targetActor = targetActor;
-        this.target = targetActor.BoundingBox;
-        this.targetOrigin = new Vector2(target.Left + (target.Width / 2), target.Top + (target.Height / 2));
-        this.tiledMapSize = tiledMapSize;
-        this.position = position;
-        this.viewportSize = viewportSize;
-        this.moveSpeed = moveSpeed;
-        this.cameraVelocity = Vector2.Zero;
-        this.verticalStillcamZone = verticalStillcamZone;
-        this.horizontalStillcamZone = horizontalStillcamZone;
-        this.cameraMargin = cameraMargin;
-        translationMatrix = CalculateTranslation();
+    public Camera2D(Actor target, int stageWidth, int stageHeight, float cameraMovespeed = 96.0f) {
+        this.target = target;
+        this.stageSize = new Vector2( stageWidth, stageHeight);
+        this.cameraMoveSpeed = cameraMovespeed;
+        Zoom = 3.0f;
     }
 
-    // Methods    
+
+    // Call this method with negative values to zoom out
+    // or positive values to zoom in. It looks at the current zoom
+    // and adjusts it by the specified amount. If we were at a 1.0f
+    // zoom level and specified -0.5f amount it would leave us with
+    // 1.0f - 0.5f = 0.5f so everything would be drawn at half size.
+    public void AdjustZoom( float amount )
+    {
+        Zoom += amount;
+        if ( Zoom < 0.25f )
+        {
+            Zoom = 0.25f;
+        }
+    }
+
+    // Move the camera in an X and Y amount based on the cameraMovement param.
+    // if clampToMap is true the camera will try not to pan outside of the
+    // bounds of the map.
+    public void MoveCamera( Vector2 cameraMovement, bool clampToMap = true )
+    {
+        Vector2 newPosition = Position + cameraMovement;
+
+        if ( clampToMap )
+        {
+            Position = MapClampedPosition( newPosition );
+        }
+        else
+        {
+            Position = newPosition;
+        }
+    }
+
+    public Rectangle ViewportWorldBoundry()
+    {
+        Vector2 viewPortCorner = ScreenToWorld( new Vector2( 0, 0 ) );
+        Vector2 viewPortBottomCorner =
+            ScreenToWorld( new Vector2( ViewportWidth, ViewportHeight ) );
+
+        return new Rectangle( (int) viewPortCorner.X,
+            (int) viewPortCorner.Y,
+            (int) ( viewPortBottomCorner.X - viewPortCorner.X ),
+            (int) ( viewPortBottomCorner.Y - viewPortCorner.Y ) );
+    }
+
+    // Center the camera on specific pixel coordinates
+    public void CenterOn( Vector2 position )
+    {
+        Position = position;
+    }
+
+    // Clamp the camera so it never leaves the visible area of the map.
+    private Vector2 MapClampedPosition( Vector2 position )
+    {
+        var cameraMax = new Vector2( stageSize.X -
+            ( ViewportWidth / Zoom / 2 ),
+            stageSize.Y -
+            ( ViewportHeight / Zoom / 2 ) );
+
+        return Vector2.Clamp( position,
+            new Vector2( ViewportWidth / Zoom / 2, ViewportHeight / Zoom / 2 ),
+            cameraMax );
+    }
+
+    public Vector2 WorldToScreen( Vector2 worldPosition )
+    {
+        return Vector2.Transform( worldPosition, TranslationMatrix );
+    }
+
+    public Vector2 ScreenToWorld( Vector2 screenPosition )
+    {
+        return Vector2.Transform( screenPosition,
+            Matrix.Invert( TranslationMatrix ) );
+    }
+
     public void Update() {
-
-        // Check if Target is outside the Vertical Stillcam Zone on the Left or Right Side
-        if (target.Left < verticalStillcamZone.Left) {
-            // Begin Moving Left
-            int leftDiff = Math.Abs(target.Left - verticalStillcamZone.Left);
-
-            if(leftDiff < cameraMargin) {
-                // Snap Camera into Position
-                position = new Vector2(position.X - leftDiff, position.Y);
-                cameraVelocity = new Vector2(0, cameraVelocity.Y);
-                this.origin = new Vector2(
-                    (int)position.X + (int)(viewportSize.X / 2),
-                    (int)position.Y + (int)(viewportSize.Y / 2)
-                );
-                GenerateStillcamZones();
-            }
-            else {
-                // Set Camera Velocity
-                cameraVelocity = new Vector2(
-                    -leftDiff,
-                    cameraVelocity.Y
-                );
-            }
-        }
-        else if (target.Right > verticalStillcamZone.Right) {
-            // Begin Moving Right
-            int rightDiff = Math.Abs(target.Right - verticalStillcamZone.Right);
-
-            if(rightDiff < cameraMargin) {
-                // Snap Camera into Position
-                position = new Vector2(position.X + rightDiff, position.Y);
-                cameraVelocity = new Vector2(0, cameraVelocity.Y);
-                this.origin = new Vector2(
-                    (int)position.X + (int)(viewportSize.X / 2),
-                    (int)position.Y + (int)(viewportSize.Y / 2)
-                );
-                GenerateStillcamZones();
-            }
-            else {
-                // Set Camera Velocity
-                cameraVelocity = new Vector2(
-                    rightDiff,
-                    cameraVelocity.Y
-                );
-            }
-        }
-
-    // Check if Target is outside the Horizontal Stillcam Zone on the Bottom or Top Side
-        if (target.Bottom > horizontalStillcamZone.Bottom) {
-            // Begin Moving Down
-            int bottomDiff = Math.Abs(target.Bottom - horizontalStillcamZone.Bottom);
-
-            if(bottomDiff < cameraMargin) {
-                // Snap Camera to Correct Position
-                position = new Vector2(position.X, position.Y + bottomDiff);
-                cameraVelocity = new Vector2(cameraVelocity.X, 0);
-                this.origin = new Vector2(
-                    (int)position.X + (int)(viewportSize.X / 2),
-                    (int)position.Y + (int)(viewportSize.Y / 2)
-                );
-                GenerateStillcamZones();
-            }
-            else {
-                // Set Camera Velocity
-                cameraVelocity = new Vector2(
-                    cameraVelocity.X,
-                    bottomDiff
-                );
-            }
-        }
-        else if (target.Top < horizontalStillcamZone.Top) {
-            // Begin Moving Up
-            int topDiff = Math.Abs(target.Top - horizontalStillcamZone.Top);
-            if(topDiff < cameraMargin) {
-                // Snap Camera to Position
-                position = new Vector2(position.X, position.Y - topDiff);
-                this.origin = new Vector2(
-                    (int)position.X + (int)(viewportSize.X / 2),
-                    (int)position.Y + (int)(viewportSize.Y / 2)
-                );
-                cameraVelocity = new Vector2(cameraVelocity.X, 0);
-                GenerateStillcamZones();
-            }
-            else {
-                // Set Camera Velocity
-                cameraVelocity = new Vector2(
-                    cameraVelocity.X,
-                    -topDiff
-                );
-            }
-        }
-
-        // If any Velocity is being applied, update the camera via a Lerp call to keep movement smooth
-        if(cameraVelocity.X != 0 || cameraVelocity.Y != 0) {
-            position = Globals.Lerp(Position, (Position + cameraVelocity), Globals.DeltaTime);
-            this.origin = new Vector2(
-                (int)position.X + (int)(viewportSize.X / 2),
-                (int)position.Y + (int)(viewportSize.Y / 2)
-            );
-            GenerateStillcamZones();
-            cameraVelocity = Vector2.Zero;
-        }
-
-        // Clamp Camera to Camera Limits
-        ClampCamera();
-
-        // Update the Transformation Matrix
-        translationMatrix = CalculateTranslation();
-    }
-
-    public void GenerateStillcamZones() {
-        this.verticalStillcamZone = new Rectangle(
-            (int)origin.X - (int)(viewportSize.X / 4),
-            (int)position.Y,
-            (int)viewportSize.X / 2,
-            (int)viewportSize.Y);
-
-        this.horizontalStillcamZone = new Rectangle(
-            (int)position.X,
-            (int)origin.Y - (int)(viewportSize.Y / 4),
-            (int)viewportSize.X,
-            (int)(viewportSize.Y / 2)
-        );
-    }
-
-    protected Matrix CalculateTranslation() {
-        var dx = (viewportSize.X / 2) - targetOrigin.X;
-        dx = Math.Clamp(dx, -tiledMapSize.X + viewportSize.X + (16), 16);
-        var dy = (viewportSize.Y / 2) - targetOrigin.Y;
-        dy = Math.Clamp(dy, -tiledMapSize.Y + viewportSize.Y + 16, 16);
-        return Matrix.CreateTranslation(dx, dy, 0f);
-    }
-
-    protected void ClampCamera() {
-        // Get updated X and/or Y based on Clamp Limits
-        float cameraXClamped = Math.Clamp(position.X, 0, tiledMapSize.X);
-        float cameraYClamped = Math.Clamp(position.Y, 0, tiledMapSize.Y);
-
-        if(cameraXClamped != position.X || cameraYClamped != position.Y) {
-            // If either value needs to be updated, update the position of the camera and re-generate stillcam zones
-            position = new Vector2(cameraXClamped, cameraYClamped);
-            GenerateStillcamZones();
-            translationMatrix = CalculateTranslation();
-        }
-    }
-
-    public void OnTargetActorFinishedMoving(object o, MoveEventArgs args) {
-        target = args.Boundingbox;
-        GenerateStillcamZones();
-        targetOrigin = new Vector2(target.Left + (target.Width / 2), target.Top + (target.Height / 2));
-        translationMatrix = CalculateTranslation();
-    }
-
-    public void Draw(SpriteBatch spriteBatch) {
-        spriteBatch.Draw(Globals.DebugTexture, VerticalStillcamZone, Color.DarkGreen * 0.5f);
-        spriteBatch.Draw(Globals.DebugTexture, horizontalStillcamZone, Color.DarkGreen * 0.5f);
+        CenterOn(target.Origin);
     }
 }

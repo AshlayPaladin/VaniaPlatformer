@@ -35,6 +35,7 @@ public class Player : Actor {
     // Properties 
     private AnimationManager animationManager;
     private Vector2 boundingSize;
+    public new Rectangle BoundingBox { get { return boundingBox; } }
 
     // Constructors
     public Player(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0) {
@@ -103,7 +104,6 @@ public class Player : Actor {
             }
         }
         else {
-
             OnMoving(this, new MoveEventArgs(new Vector2(bottomBoundingBox.X, bottomBoundingBox.Y), Velocity, bottomBoundingBox));
 
             if(collisions.Count == 0) 
@@ -134,7 +134,6 @@ public class Player : Actor {
 
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
         if(keyboardState.IsKeyDown(Keys.A)) {
-
             OnMoving(this, new MoveEventArgs(new Vector2(leftBoundingBox.X, leftBoundingBox.Y), Velocity, leftBoundingBox));
 
             if(collisions.Count > 0) {
@@ -143,16 +142,13 @@ public class Player : Actor {
                 Velocity = new Vector2(0, Velocity.Y);
             } 
             else {
-                float velocityX = (Velocity.X - moveSpeed) * Globals.DeltaTime;
+                float velocityX = -(Velocity.X + moveSpeed) * Globals.DeltaTime;
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
         }
 
         if(keyboardState.IsKeyDown(Keys.D)) {
-            // Create a test rectangle on right side of Player to check for SolidActors
-            //rightBoundingBox = new Rectangle((int)boundingBox.Right + 1, (int)Position.Y, 1, boundingBox.Height);
-
             // Send out OnMoving event to trigger SolidActors to verify their position in relation to Player
             OnMoving(this, new MoveEventArgs(new Vector2(rightBoundingBox.X, rightBoundingBox.Y), Velocity, rightBoundingBox));
 
