@@ -100,9 +100,9 @@ public class MainGame : Game
         }
         
         _camera = new Camera2D(_testPlayer, _testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileHeight);
-        _camera.ViewportWidth = _graphics.GraphicsDevice.Viewport.Width;
-        _camera.ViewportHeight = _graphics.GraphicsDevice.Viewport.Height;
-        //_testPlayer.FinishedMoving += _camera.OnTargetActorFinishedMoving;
+        //_camera.ViewportWidth = _graphics.GraphicsDevice.Viewport.Width;
+        //_camera.ViewportHeight = _graphics.GraphicsDevice.Viewport.Height;
+        _camera.SetViewportSize(_graphics.GraphicsDevice.Viewport.Width, _graphics.GraphicsDevice.Viewport.Height);
 
         base.Initialize();
     }

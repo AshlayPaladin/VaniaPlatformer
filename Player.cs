@@ -142,7 +142,7 @@ public class Player : Actor {
                 Velocity = new Vector2(0, Velocity.Y);
             } 
             else {
-                float velocityX = -(Velocity.X + moveSpeed) * Globals.DeltaTime;
+                float velocityX = -((Velocity.X + moveSpeed) * Globals.DeltaTime);
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
@@ -240,6 +240,8 @@ public class Player : Actor {
 
                             proposedPosition = new Vector2(collisionProposedX, proposedPosition.Y);
                         }
+
+                        Velocity = new Vector2(0, Velocity.Y);
                     }
                     else {
                         float topDiff = Math.Abs(collision.Top - boundingBox.Top);
@@ -261,10 +263,11 @@ public class Player : Actor {
 
                             onGround = false;
                         }
+
+                        Velocity = new Vector2(Velocity.X, 0);
                     }
                 }
 
-                Velocity = new Vector2(0,0);
                 collisions.Clear();
             }
 

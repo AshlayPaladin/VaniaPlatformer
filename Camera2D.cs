@@ -1,13 +1,18 @@
-    using Microsoft.Xna.Framework;
+using System;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
-    namespace VaniaPlatformer;
+namespace VaniaPlatformer;
 
     public class Camera2D {
 
-        // Fields
+    // Fields
     private Actor target;
     private Vector2 stageSize;
     private float cameraMoveSpeed;
+    private float cameraSnapDistance;
+    private Vector2 gameResolution;
 
     // Properties
     public Vector2 Position { get; private set; }
@@ -46,11 +51,13 @@
         }
     }
 
-    public Camera2D(Actor target, int stageWidth, int stageHeight, float cameraMovespeed = 96.0f) {
+    public Camera2D(Actor target, int stageWidth, int stageHeight, float cameraMovespeed = 2.0f) {
         this.target = target;
         this.stageSize = new Vector2( stageWidth, stageHeight);
         this.cameraMoveSpeed = cameraMovespeed;
-        Zoom = 3.0f;
+        Zoom = 1.0f;
+        cameraSnapDistance = 2f;
+        gameResolution = new Vector2(640, 320);
     }
 
 
@@ -66,6 +73,16 @@
         {
             Zoom = 0.25f;
         }
+    }
+
+    public void SetViewportSize(int width, int height) {
+        ViewportWidth = width;
+        ViewportHeight = height;
+
+        float zoomX = ViewportWidth / gameResolution.X;
+        float zoomY = ViewportHeight / gameResolution.Y;
+
+        Zoom = zoomX > zoomY ? zoomX : zoomY;
     }
 
     // Move the camera in an X and Y amount based on the cameraMovement param.
@@ -100,7 +117,25 @@
     // Center the camera on specific pixel coordinates
     public void CenterOn( Vector2 position )
     {
-        Position = position;
+        //Position = position;
+        float horizontalDiff = Math.Abs(Position.X - position.X);
+        float verticalDiff = Math.Abs(Position.Y - position.Y);
+
+        // Set Snapping Position
+        int newPositionX = (int)position.X;
+        int newPositionY = (int)position.Y;
+
+        if( horizontalDiff > cameraSnapDistance ) {
+            // Lerp Horizontal
+            newPositionX = (int)Globals.Lerp(Position.X, position.X, cameraMoveSpeed * Globals.DeltaTime);
+        }
+
+        if ( verticalDiff > cameraSnapDistance ) {
+            // Lerp Distance
+            newPositionY = (int)Globals.Lerp(Position.Y, position.Y, cameraMoveSpeed * Globals.DeltaTime);
+        }
+
+        Position = new Vector2(newPositionX, newPositionY);
     }
 
     // Clamp the camera so it never leaves the visible area of the map.
