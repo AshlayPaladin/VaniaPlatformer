@@ -1,7 +1,57 @@
-{ "compressionlevel":-1,
+{ "backgroundcolor":"#55aaff",
+ "compressionlevel":-1,
  "height":20,
  "infinite":false,
  "layers":[
+        {
+         "class":"Background",
+         "id":5,
+         "image":"BackMountains.png",
+         "name":"Background0",
+         "offsetx":0,
+         "offsety":-160,
+         "opacity":1,
+         "parallaxy":0,
+         "properties":[
+                {
+                 "name":"ParallaxEnabled",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
+                 "name":"ParallaxWithPlayer",
+                 "type":"bool",
+                 "value":true
+                }],
+         "repeatx":true,
+         "type":"imagelayer",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "class":"Background",
+         "id":6,
+         "image":"BackClouds.png",
+         "name":"Background1",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"ParallaxEnabled",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
+                 "name":"ParallaxSpeed",
+                 "type":"float",
+                 "value":36
+                }],
+         "repeatx":true,
+         "type":"imagelayer",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
         {
          "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -387,7 +437,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":5,
+ "nextlayerid":7,
  "nextobjectid":41,
  "orientation":"orthogonal",
  "renderorder":"right-down",

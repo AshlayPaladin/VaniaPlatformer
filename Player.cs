@@ -25,7 +25,13 @@ public class Player : Actor {
     private Rectangle bottomBoundingBox;
     private float coyoteTime;
     private float coyoteTimeReset;
-    private float moveSpeed;
+    private float baseMoveSpeed;
+    private float minimumMoveSpeed;
+    private float activeMoveSpeed;
+    private float topMoveSpeed;
+    private float baseAcceleration;
+    private float activeAcceleration;
+    private bool isRunning;
     private float jumpSpeed;
     private float maxFallSpeed;
     private float gravity;
@@ -44,9 +50,15 @@ public class Player : Actor {
         textureSheetId = "textures/AdventurerSheet";
         animationManager = new AnimationManager();
         boundingSize = new Vector2(collisionWidth,collisionHeight);
-        moveSpeed = 128.0f;
+        baseMoveSpeed = 128.0f;
+        minimumMoveSpeed = 16f;
+        activeMoveSpeed = 0f;
+        topMoveSpeed = baseMoveSpeed;
+        baseAcceleration = 8f;
+        activeAcceleration = baseAcceleration;
         jumpSpeed = 384.0f;
         onGround = false;
+        isRunning = false;
 
         gravity = 0.35f;
         maxFallSpeed = 128.0f;
@@ -87,6 +99,9 @@ public class Player : Actor {
         animationManager.Draw(spriteBatch, boundingBox, Color.White);
         //spriteBatch.Draw(Globals.DebugTexture, boundingBox, Color.Yellow * 0.5f);
         //spriteBatch.Draw(Globals.DebugTexture, bottomBoundingBox, Color.Red * 0.5f);
+        //spriteBatch.Draw(Globals.DebugTexture, leftBoundingBox, Color.Red * 0.5f);
+        //spriteBatch.Draw(Globals.DebugTexture, rightBoundingBox, Color.Red * 0.5f);
+        //spriteBatch.Draw(Globals.DebugTexture, topBoundingBox, Color.Red * 0.5f);
     }
 
     public override void Update() {
@@ -132,6 +147,18 @@ public class Player : Actor {
             }
         }
 
+        if(keyboardState.IsKeyDown(Keys.LeftShift) && !isRunning) {
+            topMoveSpeed *= 2f;
+            activeAcceleration *= 1.25f;
+            isRunning = true;
+        }
+
+        if(keyboardState.IsKeyUp(Keys.LeftShift) && isRunning) {
+            topMoveSpeed = baseMoveSpeed;
+            activeAcceleration = baseAcceleration;
+            isRunning = false;
+        }
+
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
         if(keyboardState.IsKeyDown(Keys.A)) {
             OnMoving(this, new MoveEventArgs(new Vector2(leftBoundingBox.X, leftBoundingBox.Y), Velocity, leftBoundingBox));
@@ -140,9 +167,21 @@ public class Player : Actor {
                 collisions.Clear();
 
                 Velocity = new Vector2(0, Velocity.Y);
+                activeMoveSpeed = 0;
             } 
             else {
-                float velocityX = (float)-(Math.Floor((Velocity.X + moveSpeed) * Globals.DeltaTime));
+                if(activeMoveSpeed < topMoveSpeed) {
+                    activeMoveSpeed += activeAcceleration;
+                }
+                else if (activeMoveSpeed > topMoveSpeed) {
+                    activeMoveSpeed = topMoveSpeed;
+                }
+
+                if(activeAcceleration < minimumMoveSpeed) {
+                    activeAcceleration = minimumMoveSpeed;
+                }
+
+                float velocityX = (float)-(Math.Floor((Velocity.X + activeMoveSpeed) * Globals.DeltaTime));
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
@@ -159,10 +198,22 @@ public class Player : Actor {
                 collisions.Clear();
 
                 Velocity = new Vector2(0, Velocity.Y);
+                activeMoveSpeed = 0;
             } 
             else {
                 // If no collisions are detected, we are free to begin moving
-                float velocityX = (Velocity.X + moveSpeed) * Globals.DeltaTime;
+                if(activeMoveSpeed < topMoveSpeed) {
+                    activeMoveSpeed += activeAcceleration;
+                }
+                else if (activeMoveSpeed > topMoveSpeed) {
+                    activeMoveSpeed = topMoveSpeed;
+                }
+
+                if(activeAcceleration < minimumMoveSpeed) {
+                    activeAcceleration = minimumMoveSpeed;
+                }
+
+                float velocityX = (Velocity.X + activeMoveSpeed) * Globals.DeltaTime;
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
@@ -170,6 +221,7 @@ public class Player : Actor {
 
         if(keyboardState.IsKeyUp(Keys.A) && keyboardState.IsKeyUp(Keys.D)) {
             Velocity = new Vector2(0, Velocity.Y);
+            activeMoveSpeed = 0;
         }
 
         // Check for Jump Key while On the Ground
@@ -191,6 +243,13 @@ public class Player : Actor {
             animationManager.Stop();
         }
         else {
+            if(Velocity.X > 0) {
+                animationManager.SetSpriteEffects(SpriteEffects.None);
+            }
+            else{
+                animationManager.SetSpriteEffects(SpriteEffects.FlipHorizontally);
+            }
+
             animationManager.Play();
         }
 
@@ -242,6 +301,7 @@ public class Player : Actor {
                         }
 
                         Velocity = new Vector2(0, Velocity.Y);
+                        //activeMoveSpeed = 0;
                     }
                     else {
                         float topDiff = Math.Abs(collision.Top - boundingBox.Top);
@@ -302,6 +362,13 @@ public class Player : Actor {
             (int)Position.Y, 
             1, 
             boundingBox.Height);
+
+        topBoundingBox = new Rectangle(
+            (int)boundingBox.Left,
+            (int)boundingBox.Top - 1,
+            (int)boundingBox.Width,
+            1
+        );
     }
 
     public void AddCollision(Rectangle collision) {

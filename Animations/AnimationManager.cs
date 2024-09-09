@@ -11,6 +11,7 @@ public class AnimationManager {
     private Animation activeAnimation;
     private float animationTimer;
     private bool playbackIsPaused;
+    private SpriteEffects spriteEffects = SpriteEffects.None;
 
     // Properties
 
@@ -67,7 +68,11 @@ public class AnimationManager {
         }
     }
 
+    public void SetSpriteEffects(SpriteEffects spriteEffects) {
+        this.spriteEffects = spriteEffects;
+    }
+
     public void Draw(SpriteBatch spriteBatch, Rectangle destinationRectangle, Color colorMask) {
-        spriteBatch.Draw(activeAnimation.Texture, destinationRectangle, activeAnimation.SourceRectangle, colorMask);
+        spriteBatch.Draw(activeAnimation.Texture, destinationRectangle, activeAnimation.SourceRectangle, colorMask, 0f, Vector2.Zero, spriteEffects, 1f);
     }
 }

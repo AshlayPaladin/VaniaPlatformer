@@ -78,7 +78,7 @@ public class MainGame : Game
                         {
                             case "PlayerSpawn" : 
                             {
-                                _testPlayer = new Player(o.Width, o.Height, o.X, o.Y);
+                                _testPlayer = new Player(32, 48, o.X, o.Y);
                                 break;
                             }
                             default:
