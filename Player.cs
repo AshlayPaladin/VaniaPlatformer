@@ -44,8 +44,8 @@ public class Player : Actor {
         textureSheetId = "textures/AdventurerSheet";
         animationManager = new AnimationManager();
         boundingSize = new Vector2(collisionWidth,collisionHeight);
-        moveSpeed = 200.0f;
-        jumpSpeed = 400.0f;
+        moveSpeed = 128.0f;
+        jumpSpeed = 384.0f;
         onGround = false;
 
         gravity = 0.35f;
@@ -142,7 +142,7 @@ public class Player : Actor {
                 Velocity = new Vector2(0, Velocity.Y);
             } 
             else {
-                float velocityX = -((Velocity.X + moveSpeed) * Globals.DeltaTime);
+                float velocityX = (float)-(Math.Floor((Velocity.X + moveSpeed) * Globals.DeltaTime));
 
                 Velocity = new Vector2(velocityX, Velocity.Y);
             }
