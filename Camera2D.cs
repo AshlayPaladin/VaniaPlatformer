@@ -62,6 +62,9 @@ namespace VaniaPlatformer;
         cameraSnapDistance = 2f;
         gameResolution = new Vector2(640, 320);
         IsScreenShaking = false;
+        
+        Random rnd = new Random();
+        shakeDirection = rnd.Next( 0, 360 );
     }
 
 
@@ -201,8 +204,7 @@ namespace VaniaPlatformer;
         // Create a Random and Offset X and Y randomly between Half-Strength and Strength Max
         Random rnd = new Random();
 
-        screenShakeOffset = new Vector2((float)(Math.Sin(rnd.Next(shakeDirection) * screenShakeStrength)), (float)(Math.Cos(shakeDirection) * screenShakeStrength));
-        //screenShakeStrength = Globals.Lerp(screenShakeStrength, 0, Globals.DeltaTime);
+        screenShakeOffset = new Vector2((float)(Math.Sin(shakeDirection) * screenShakeStrength), (float)(Math.Cos(shakeDirection) * screenShakeStrength));
         screenShakeStrength /= 1.25f;
         shakeDirection += (150 + rnd.Next(60));
     }
