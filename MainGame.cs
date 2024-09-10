@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using TiledMapLib;
 using Newtonsoft.Json;
 using System.IO;
+using System;
 
 namespace VaniaPlatformer;
 
@@ -128,6 +129,14 @@ public class MainGame : Game
 
         if(Keyboard.GetState().IsKeyUp(Keys.OemTilde) && tildePressed) {
             tildePressed = false;
+        }
+
+        if(Keyboard.GetState().IsKeyDown(Keys.LeftShift) &&
+        Keyboard.GetState().IsKeyDown(Keys.LeftControl) &&
+        Keyboard.GetState().IsKeyDown(Keys.S) &&
+        _camera.IsScreenShaking == false) {
+            Random rnd = new Random();
+            _camera.ShakeCamera(rnd.Next(8, 128));
         }
 
         _testPlayer.Update();

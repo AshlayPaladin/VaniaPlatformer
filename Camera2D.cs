@@ -1,7 +1,5 @@
 using System;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace VaniaPlatformer;
 
@@ -13,11 +11,16 @@ namespace VaniaPlatformer;
     private float cameraMoveSpeed;
     private float cameraSnapDistance;
     private Vector2 gameResolution;
+    private Vector2 screenShakeOffset;
+    private float screenShakeStrength;
+    private float screenShakeDuration;
+    private int shakeDirection;
 
     // Properties
     public Vector2 Position { get; private set; }
     public float Zoom { get; private set; }
     public float Rotation { get; private set; }
+    public bool IsScreenShaking { get; private set; }
 
     // Width and Height of Viewport window which we need to adjust
     // each time the player resizes the game window
@@ -43,8 +46,8 @@ namespace VaniaPlatformer;
         {
             Position = MapClampedPosition( Position );
 
-            return Matrix.CreateTranslation( -(int) Position.X,
-                -(int) Position.Y, 0 ) *
+            return Matrix.CreateTranslation( -(int) Position.X + screenShakeOffset.X,
+                -(int) Position.Y + screenShakeOffset.Y, 0 ) *
                 Matrix.CreateRotationZ( Rotation ) *
                 Matrix.CreateScale( new Vector3( Zoom, Zoom, 1 ) ) *
                 Matrix.CreateTranslation( new Vector3( ViewportCenter, 0 ) );
@@ -58,6 +61,7 @@ namespace VaniaPlatformer;
         Zoom = 1.0f;
         cameraSnapDistance = 2f;
         gameResolution = new Vector2(640, 320);
+        IsScreenShaking = false;
     }
 
 
@@ -163,6 +167,43 @@ namespace VaniaPlatformer;
     }
 
     public void Update() {
+        if(IsScreenShaking) {
+            // Reduce our Timer
+            screenShakeDuration -= Globals.DeltaTime;
+            
+            // Update our Offset
+            RandomizeShakeOffset();
+
+            // Check if we can stop the Shaking
+            if(screenShakeStrength <= 0.5f) {
+                IsScreenShaking = false;
+                screenShakeStrength = 0;
+                screenShakeOffset = Vector2.Zero;
+            }
+        }
+
         CenterOn(target.Origin);
+    }
+
+    public void ShakeCamera( int shakeStrength ) {
+        // Reset the Screen Shake Offset
+        screenShakeOffset = Vector2.Zero;
+        screenShakeStrength = shakeStrength;
+
+        // Create a new Screenshake Offset
+        RandomizeShakeOffset();
+
+        // Set IsScreenShaking
+        IsScreenShaking = true;
+    }
+
+    private void RandomizeShakeOffset() {
+        // Create a Random and Offset X and Y randomly between Half-Strength and Strength Max
+        Random rnd = new Random();
+
+        screenShakeOffset = new Vector2((float)(Math.Sin(rnd.Next(shakeDirection) * screenShakeStrength)), (float)(Math.Cos(shakeDirection) * screenShakeStrength));
+        //screenShakeStrength = Globals.Lerp(screenShakeStrength, 0, Globals.DeltaTime);
+        screenShakeStrength /= 1.25f;
+        shakeDirection += (150 + rnd.Next(60));
     }
 }
