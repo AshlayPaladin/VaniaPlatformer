@@ -175,7 +175,7 @@ namespace VaniaPlatformer;
             screenShakeDuration -= Globals.DeltaTime;
             
             // Update our Offset
-            RandomizeShakeOffset();
+            CalculateShakeOffset();
 
             // Check if we can stop the Shaking
             if(screenShakeStrength <= 0.5f) {
@@ -194,13 +194,13 @@ namespace VaniaPlatformer;
         screenShakeStrength = shakeStrength;
 
         // Create a new Screenshake Offset
-        RandomizeShakeOffset();
+        CalculateShakeOffset();
 
         // Set IsScreenShaking
         IsScreenShaking = true;
     }
 
-    private void RandomizeShakeOffset() {
+    private void CalculateShakeOffset() {
         // Create a Random and Offset X and Y randomly between Half-Strength and Strength Max
         Random rnd = new Random();
 
