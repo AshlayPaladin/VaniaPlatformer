@@ -23,7 +23,7 @@ public abstract class Actor {
     public abstract void Update();
     public abstract void MoveAndSlide();
     public virtual void SetOrigin() {
-        Origin = new Vector2(Position.X + (BoundingBox.Width / 2), Position.Y + (BoundingBox.Height / 2));
+        Origin = new Vector2(BoundingBox.Width / 2, BoundingBox.Height / 2);
     }
     public virtual void OnCollision(EventArgs args) {
         HasCollided?.Invoke(this, args);

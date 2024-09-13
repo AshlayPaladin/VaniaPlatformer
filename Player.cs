@@ -10,11 +10,12 @@ namespace VaniaPlatformer;
 public class Player : Actor {
     
     // Constants
-    private const string ANIM_KEY_IDLE = "Idle";
+    private const string ANIM_KEY_RUN = "Run";
 
     // Events
     public event EventHandler<MoveEventArgs> IsMoving;
     public event EventHandler<MoveEventArgs> FinishedMoving;
+    public event EventHandler HeadBonked;
 
     // Fields
     private string textureSheetId;
@@ -35,12 +36,12 @@ public class Player : Actor {
     private float jumpSpeed;
     private float maxFallSpeed;
     private float gravity;
-    List<Rectangle> collisions;
-    bool onGround;
-
-    // Properties 
+    private List<Rectangle> collisions;
+    private bool onGround;
     private AnimationManager animationManager;
     private Vector2 boundingSize;
+
+    // Properties 
     public new Rectangle BoundingBox { get { return boundingBox; } }
 
     // Constructors
@@ -84,15 +85,15 @@ public class Player : Actor {
         Texture2D textureSheet = Globals.Content.Load<Texture2D>(textureSheetId);
 
         animationManager.AddAnimation(
-            ANIM_KEY_IDLE,
-            new Animation(
+            ANIM_KEY_RUN,
+            new AnimatedSprite(
                 textureSheet, 
-                new Vector2(50,38), 
-                new Vector2(50,37), 
-                6, 0.05f, false)
+                new Rectangle(50, 38, 50, 37), 
+                6, 0.05f, 
+                AnimatedSprite.Loop.Reverse)
         );
 
-        animationManager.Play(ANIM_KEY_IDLE);
+        animationManager.Play(ANIM_KEY_RUN);
     }
 
     public void Draw(SpriteBatch spriteBatch) {
@@ -322,6 +323,8 @@ public class Player : Actor {
                             proposedPosition = new Vector2(proposedPosition.X, collisionProposedY);
 
                             onGround = false;
+
+                            OnHeadBonked();
                         }
 
                         Velocity = new Vector2(Velocity.X, 0);
@@ -381,5 +384,9 @@ public class Player : Actor {
 
     protected void OnFinishedMoving() {
         FinishedMoving?.Invoke(this, new MoveEventArgs(Position, Velocity, BoundingBox));
+    }
+
+    protected void OnHeadBonked() {
+        HeadBonked?.Invoke(this, null);
     }
 }

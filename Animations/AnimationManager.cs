@@ -7,37 +7,35 @@ namespace VaniaPlatformer.Animations;
 public class AnimationManager {
     
     // Fields
-    private Dictionary<string,Animation> animationDictionary;
-    private Animation activeAnimation;
-    private float animationTimer;
     private bool playbackIsPaused;
-    private SpriteEffects spriteEffects = SpriteEffects.None;
+    private SpriteEffects spriteEffect;
 
     // Properties
-
+    public Dictionary<string, AnimatedSprite> AnimatedSprites { get; private set; }
+    public AnimatedSprite Sprite { get; private set; }
 
     // Constructors
     public AnimationManager() {
-        animationDictionary = new Dictionary<string,Animation>();
-        activeAnimation = null;
-        animationTimer = 0;
         playbackIsPaused = false;
+        spriteEffect = SpriteEffects.None;
+
+        AnimatedSprites = new Dictionary<string, AnimatedSprite>();
+        Sprite = null;
     }
 
     // Methods
-    public void AddAnimation(string name, Animation animation) {
-        if(animationDictionary.ContainsKey(name)) {
-            animationDictionary[name] = animation;
+    public void AddAnimation(string name, AnimatedSprite animation) {
+        if(AnimatedSprites.ContainsKey(name)) {
+            AnimatedSprites[name] = animation;
         }
         else {
-            animationDictionary.Add(name,animation);
+            AnimatedSprites.Add(name, animation);
         }
     }
 
     public void Play(string name) {
-        if(animationDictionary.ContainsKey(name)) {
-                activeAnimation = animationDictionary[name];
-                animationTimer = activeAnimation.FrameTime;
+        if(AnimatedSprites.ContainsKey(name)) {
+                Sprite = AnimatedSprites[name];
                 return;
             }
     }
@@ -47,7 +45,7 @@ public class AnimationManager {
     }
 
     public void Resume() {
-        if(playbackIsPaused && activeAnimation != null) {
+        if(playbackIsPaused && Sprite != null) {
             playbackIsPaused = false;
         }
     }
@@ -57,22 +55,24 @@ public class AnimationManager {
     }
 
     public void Update() {
-        if (activeAnimation != null && !playbackIsPaused) {
-            if(animationTimer > 0) {
-                animationTimer -= Globals.DeltaTime;
-            }
-            else {
-                activeAnimation.NextFrame();
-                animationTimer = activeAnimation.FrameTime;
-            }
+        if (Sprite != null && !playbackIsPaused) {
+            Sprite.Update();
         }
     }
 
-    public void SetSpriteEffects(SpriteEffects spriteEffects) {
-        this.spriteEffects = spriteEffects;
+    public void FlipHorizontally() {
+        this.spriteEffect = SpriteEffects.FlipHorizontally;
+    }
+
+    public void FlipVertically() {
+        this.spriteEffect = SpriteEffects.FlipVertically;
+    }
+
+    public void SetSpriteEffects(SpriteEffects spriteEffect) {
+        this.spriteEffect = spriteEffect;
     }
 
     public void Draw(SpriteBatch spriteBatch, Rectangle destinationRectangle, Color colorMask) {
-        spriteBatch.Draw(activeAnimation.Texture, destinationRectangle, activeAnimation.SourceRectangle, colorMask, 0f, Vector2.Zero, spriteEffects, 1f);
+        Sprite.Draw(spriteBatch, destinationRectangle, colorMask, spriteEffect);
     }
 }

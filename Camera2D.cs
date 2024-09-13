@@ -65,6 +65,11 @@ namespace VaniaPlatformer;
         
         Random rnd = new Random();
         shakeDirection = rnd.Next( 0, 360 );
+
+        if(target.GetType() == typeof(Player)) {
+            Player player = (Player)target;
+            player.HeadBonked += OnPlayerHeadBonked;
+        }
     }
 
 
@@ -207,5 +212,9 @@ namespace VaniaPlatformer;
         screenShakeOffset = new Vector2((float)(Math.Sin(shakeDirection) * screenShakeStrength), (float)(Math.Cos(shakeDirection) * screenShakeStrength));
         screenShakeStrength /= 1.25f;
         shakeDirection += (150 + rnd.Next(60));
+    }
+
+    private void OnPlayerHeadBonked(object o, EventArgs args) {
+        this.ShakeCamera(4);
     }
 }
