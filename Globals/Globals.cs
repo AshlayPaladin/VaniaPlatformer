@@ -1,14 +1,18 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using TiledMapLib;
 
 namespace VaniaPlatformer;
 
 public static class Globals {
 
-    // Fields
-
+    // Constants
+    public const Keys LeftKey = Keys.A;
+    public const Keys RightKey = Keys.D;
+    public const Keys JumpKey = Keys.W;
+    public const Keys RunKey = Keys.LeftShift;
 
     // Properties & Collections
     public static ContentManager Content;

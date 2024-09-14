@@ -9,13 +9,16 @@ namespace VaniaPlatformer;
 public class PlayerEntity : Entity {
     
     // Constants
-    private const string ANIM_KEY_RUN = "Run";
 
     // Events
     public event EventHandler HeadBonked;
 
     // Fields
     private string textureSheetId;
+    private bool isLeftKeyPressed;
+    private bool isRightKeyPressed;
+    private bool isJumpKeyPressed;
+    private bool isRunKeyPressed;
 
     // Properties
 
@@ -55,6 +58,10 @@ public class PlayerEntity : Entity {
             new MoveComponent()
         );
 
+        AddComponent(
+            new InputComponent()
+        );
+
         // Connect our ColliderComponent Collided event to the MoveComponent collision correction method
         GetComponent<ColliderComponent>().Collided += GetComponent<MoveComponent>().OnCollision;
     }
@@ -71,26 +78,25 @@ public class PlayerEntity : Entity {
     }
 
     public void Update() {
-        KeyboardState keyboardState = Keyboard.GetState();
-
         MoveComponent movement = GetComponent<MoveComponent>();
         ColliderComponent collider = GetComponent<ColliderComponent>();
+        InputComponent input = GetComponent<InputComponent>();
 
         // Check for Input
-        if(keyboardState.IsKeyDown(Keys.LeftShift) && !movement.IsRunning) {
+        if(input.IsRunKeyDown && !movement.IsRunning) {
             movement.MaxMoveSpeed *= 2f;
             movement.CurrentAcceleration *= 1.25f;
             movement.IsRunning = true;
         }
 
-        if(keyboardState.IsKeyUp(Keys.LeftShift) && movement.IsRunning) {
+        if(!input.IsRunKeyDown && movement.IsRunning) {
             movement.MaxMoveSpeed = movement.BaseMoveSpeed;
             movement.CurrentAcceleration = movement.BaseAcceleration;
             movement.IsRunning = false;
         }
 
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
-        if(keyboardState.IsKeyDown(Keys.A)) {
+        if(input.IsLeftKeyDown) {
             if(ColliderSystem.CheckForAnyCollision(collider.LeftCollider))
             {
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
@@ -115,7 +121,7 @@ public class PlayerEntity : Entity {
             }
         }
 
-        if(keyboardState.IsKeyDown(Keys.D)) {
+        if(input.IsRightKeyDown) {
 
             // If the ColliderSystem returns true, we are against a wall on our right already
             if(ColliderSystem.CheckForAnyCollision(collider.RightCollider)) {
@@ -142,18 +148,18 @@ public class PlayerEntity : Entity {
             }
         }
 
-        if(keyboardState.IsKeyUp(Keys.A) && keyboardState.IsKeyUp(Keys.D)) {
+        if(!input.IsLeftKeyDown && !input.IsRightKeyDown) {
             movement.Velocity = new Vector2(0, movement.Velocity.Y);
             movement.CurrentMoveSpeed = 0;
         }
 
         // Check for Jump Key while On the Ground
-        if(keyboardState.IsKeyDown(Keys.W) && movement.OnGround) {
+        if(input.IsJumpKeyDown && movement.OnGround) {
             movement.Jump();
         }
 
         // End Jump Premature if Jump Key is Released before reaching max jump height
-        if(keyboardState.IsKeyUp(Keys.W) && !movement.OnGround && movement.Velocity.Y < 0) {
+        if(!input.IsJumpKeyDown && !movement.OnGround && movement.Velocity.Y < 0) {
             movement.Velocity = new Vector2(movement.Velocity.X, 0);
         }
 

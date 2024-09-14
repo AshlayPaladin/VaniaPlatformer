@@ -122,7 +122,7 @@ public class MainGame : Game
             tildePressed = false;
         }
         
-
+        InputSystem.Update();
         TransformSystem.Update();
         MoveSystem.Update();
         ColliderSystem.Update();
