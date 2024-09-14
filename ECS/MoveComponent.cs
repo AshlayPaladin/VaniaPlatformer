@@ -18,7 +18,7 @@ public class MoveComponent : Component
     public float CoyoteTime = 0.15f;
     public float BaseAcceleration = 8f;
     public float CurrentAcceleration = 0f;
-    public float JumpSpeed = 384.0f;
+    public float JumpSpeed = 420.0f;
     public float MaxFallSpeed = 128.0f;
     public float EffectiveGravity = 0.35f;
     public bool IsRunning = false;
@@ -75,6 +75,9 @@ public class MoveComponent : Component
                         Velocity = new Vector2(Velocity.X, currentFallSpeed);
                     }
                 }
+                else {
+                    coyoteTimer = CoyoteTime;
+                }
             }
         }
 
@@ -94,6 +97,19 @@ public class MoveComponent : Component
                     collider.Collider.Width,
                     collider.Collider.Height
                 );
+            }
+
+            var sprite = Entity.GetComponent<SpriteComponent>();
+            if(sprite != null)
+            {
+                if(Velocity.X < 0)
+                {
+                    sprite.SpriteEffect = SpriteEffects.FlipHorizontally;
+                }
+                else
+                {
+                    sprite.SpriteEffect = SpriteEffects.None;
+                }
             }
         }
     }
@@ -133,7 +149,8 @@ public class MoveComponent : Component
         var transform = Entity.GetComponent<TransformComponent>();
         var playerCollider = Entity.GetComponent<ColliderComponent>().Collider;
 
-        if(args.CollisionRectangle.Height >= args.CollisionRectangle.Width) {
+        if(args.CollisionRectangle.Height >= args.CollisionRectangle.Width) 
+        {
             float leftDiff = Math.Abs(args.CollisionRectangle.Left - playerCollider.Left);
             float rightDiff = Math.Abs(args.CollisionRectangle.Right - playerCollider.Right);
 
@@ -152,7 +169,8 @@ public class MoveComponent : Component
 
             Velocity = new Vector2(0, Velocity.Y);
         }
-        else {
+        else 
+        {
             float topDiff = Math.Abs(args.CollisionRectangle.Top - playerCollider.Top);
             float bottomDiff = Math.Abs(args.CollisionRectangle.Bottom - playerCollider.Bottom);
 
@@ -174,6 +192,17 @@ public class MoveComponent : Component
             }
 
             Velocity = new Vector2(Velocity.X, 0);
+        }
+
+        var collider = Entity.GetComponent<ColliderComponent>();
+        if(collider != null) 
+        {
+            collider.Collider = new Rectangle(
+                (int)transform.Position.X,
+                (int)transform.Position.Y,
+                collider.Collider.Width,
+                collider.Collider.Height
+            );
         }
     }
 }

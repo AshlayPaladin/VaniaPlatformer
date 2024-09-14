@@ -48,12 +48,13 @@ public class ColliderComponent : Component {
 
         if(collision != Rectangle.Empty) 
         {
-            this.OnCollision(collision);
+            this.OnCollision(component, collision);
         }
     }
 
-    public void OnCollision(Rectangle collision) 
+    public void OnCollision(ColliderComponent component, Rectangle collision) 
     {
+        component.Collided?.Invoke(this, new CollisionEventArgs(collision));
         Collided?.Invoke(this, new CollisionEventArgs(collision));
     }
 
@@ -68,27 +69,27 @@ public class ColliderComponent : Component {
 
         BottomCollider = new Rectangle(
             (int)Collider.Left,
-            (int)Collider.Bottom + 1,
+            (int)Collider.Bottom,
             Collider.Width,
             1);
 
-        RightCollider = new Rectangle(
-            (int)Collider.Right + 1,
-            (int)Collider.Y,
-            1,
-            Collider.Height);
+        TopCollider = new Rectangle(
+            (int)Collider.Left,
+            (int)Collider.Top - 1,
+            Collider.Width,
+            1);
         
         LeftCollider = new Rectangle(
             (int)Collider.Left - 1, 
-            (int)Collider.Y, 
+            (int)Collider.Top + 8, 
             1, 
-            Collider.Height);
+            Collider.Height - 16);
 
         RightCollider = new Rectangle(
-            (int)Collider.Left,
-            (int)Collider.Top - 1,
-            (int)Collider.Width,
-            1
+            (int)Collider.Right,
+            (int)Collider.Top + 8,
+            1,
+            Collider.Height - 16
         );
     }
 }

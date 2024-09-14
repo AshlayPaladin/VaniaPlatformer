@@ -64,10 +64,10 @@ public class PlayerEntity : Entity {
     public void Draw(SpriteBatch spriteBatch) {
         //animationManager.Draw(spriteBatch, boundingBox, Color.White);
         spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().Collider, Color.Yellow * 0.5f);
-        //spriteBatch.Draw(Globals.DebugTexture, bottomBoundingBox, Color.Red * 0.5f);
-        //spriteBatch.Draw(Globals.DebugTexture, leftBoundingBox, Color.Red * 0.5f);
-        //spriteBatch.Draw(Globals.DebugTexture, rightBoundingBox, Color.Red * 0.5f);
-        //spriteBatch.Draw(Globals.DebugTexture, topBoundingBox, Color.Red * 0.5f);
+        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().BottomCollider, Color.Red * 0.5f);
+        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().LeftCollider, Color.Red * 0.5f);
+        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().RightCollider, Color.Red * 0.5f);
+        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().TopCollider, Color.Red * 0.5f);
     }
 
     public void Update() {

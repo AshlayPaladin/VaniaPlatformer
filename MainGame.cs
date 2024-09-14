@@ -121,14 +121,15 @@ public class MainGame : Game
         if(Keyboard.GetState().IsKeyUp(Keys.OemTilde) && tildePressed) {
             tildePressed = false;
         }
+        
+
+        TransformSystem.Update();
+        MoveSystem.Update();
+        ColliderSystem.Update();
+        AnimationSystem.Update();
 
         _testPlayer.Update();
         _camera.Update();
-
-        TransformSystem.Update();
-        ColliderSystem.Update();
-        MoveSystem.Update();
-        AnimationSystem.Update();
 
         base.Update(gameTime);
     }

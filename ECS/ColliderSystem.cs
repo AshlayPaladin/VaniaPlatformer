@@ -24,16 +24,17 @@ public class ColliderSystem : BaseSystem<ColliderComponent>
 
     public static bool CheckForAnyCollision(Rectangle collider) 
     {
-        bool intersects = false;
-
         foreach(var c in components) 
         {
             if(c.Collider != collider)
             {
-                intersects = c.Collider.Intersects(collider);
+                if(c.Collider.Intersects(collider))
+                {
+                    return true;
+                }
             }
         }
 
-        return intersects;
+        return false;
     }
 }
