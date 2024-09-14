@@ -8,6 +8,7 @@ public class InputKey {
     // Events
     public event EventHandler KeyPressed;
     public event EventHandler KeyReleased;
+    public event EventHandler KeyHeld;
 
     // Enum
     public enum KeyState 
@@ -38,6 +39,9 @@ public class InputKey {
         else if(this.State == KeyState.Released) {
             OnKeyReleased();
         }
+        else if(this.State == KeyState.Held) {
+
+        }
     }
 
     public void OnKeyPressed() {
@@ -46,5 +50,9 @@ public class InputKey {
 
     public void OnKeyReleased() {
         KeyReleased?.Invoke(this, null);
+    }
+
+    public void OnKeyHeld() {
+        KeyHeld?.Invoke(this, null);
     }
 }

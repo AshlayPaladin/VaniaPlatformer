@@ -13,7 +13,6 @@ public class SolidActor : Actor {
     // Properties
     public int Width { get; private set;}
     public int Height { get; private set;}
-    
 
     // Constructor
     public SolidActor(Vector2 position, int width, int height) {
@@ -32,6 +31,7 @@ public class SolidActor : Actor {
         SetOrigin();
         
         Colliders = new List<Rectangle>() { boundingBox };
+        Velocity = Vector2.Zero;
     }
 
     public override void Update()

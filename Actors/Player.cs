@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using VaniaPlatformer.ECS;
 using VaniaPlatformer.Animations;
 
 namespace VaniaPlatformer;
 
-public class Player : Actor {
+public class Player : Entity {
     
     // Constants
     private const string ANIM_KEY_RUN = "Run";
@@ -24,20 +25,8 @@ public class Player : Actor {
     private Rectangle rightBoundingBox;
     private Rectangle topBoundingBox;
     private Rectangle bottomBoundingBox;
-    private float coyoteTime;
-    private float coyoteTimeReset;
-    private float baseMoveSpeed;
-    private float minimumMoveSpeed;
-    private float activeMoveSpeed;
-    private float topMoveSpeed;
-    private float baseAcceleration;
-    private float activeAcceleration;
-    private bool isRunning;
-    private float jumpSpeed;
-    private float maxFallSpeed;
-    private float gravity;
     private List<Rectangle> collisions;
-    private bool onGround;
+    
     private AnimationManager animationManager;
     private Vector2 boundingSize;
 
@@ -46,37 +35,41 @@ public class Player : Actor {
 
     // Constructors
     public Player(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0) {
-        
+
         collisions = new List<Rectangle>();
         textureSheetId = "textures/AdventurerSheet";
         animationManager = new AnimationManager();
         boundingSize = new Vector2(collisionWidth,collisionHeight);
-        baseMoveSpeed = 128.0f;
-        minimumMoveSpeed = 16f;
-        activeMoveSpeed = 0f;
-        topMoveSpeed = baseMoveSpeed;
-        baseAcceleration = 8f;
-        activeAcceleration = baseAcceleration;
-        jumpSpeed = 384.0f;
-        onGround = false;
-        isRunning = false;
 
-        gravity = 0.35f;
-        maxFallSpeed = 128.0f;
+        Components.Add(
+            new TransformComponent(
+                new Vector2(startX, startY),
+                new Vector2(1, 1)
+            )
+        );
 
-        coyoteTimeReset = 0.15f;
-        coyoteTime = coyoteTimeReset;
+        Components.Add(
+            new SpriteComponent(
+                Globals.Content.Load<Texture2D>(textureSheetId);
+            )
+        );
 
-        Colliders = new List<Rectangle>{ boundingBox };
-        Position = new Vector2(startX,startY);
-        Velocity = new Vector2(0,0);
-        
-        UpdateBoundingBox();
-        Colliders.Add(boundingBox);
+        Components.Add(
+            new AnimationComponent(
+                new Rectangle(50, 38, 50, 37),
+                6, 0.05f, AnimationComponent.Loop.Reverse
+            )
+        );
 
-        SetOrigin();
+        Components.Add(
+            new MoveComponent()
+        );
 
-        InitializeAnimations();
+        Components.Add(
+            new ColliderComponent(
+                new Rectangle(startX, startY, collisionWidth, collisionHeight)
+            )
+        );
     }
 
     // Methods
@@ -108,10 +101,12 @@ public class Player : Actor {
     public override void Update() {
         KeyboardState keyboardState = Keyboard.GetState();
 
+        MoveComponent movement = GetComponent<MoveComponent>();
+
         // Always apply Gravity if we are in the air
-        if(!onGround) {
+        if(!movement.OnGround) {
             // Add Gravity
-            float currentFallSpeed = Velocity.Y;
+            float currentFallSpeed = movement.Velocity.Y;
 
             if(currentFallSpeed < maxFallSpeed) {
                 currentFallSpeed += gravity;
