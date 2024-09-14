@@ -20,8 +20,8 @@ public class Entity
     // Methods
     public void AddComponent(Component component) 
     {
-        Components.Add(component);
         component.Entity = this;
+        Components.Add(component);
     }
 
     public T GetComponent<T>() where T : Component

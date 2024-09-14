@@ -1,12 +1,13 @@
 using System;
 using Microsoft.Xna.Framework;
+using VaniaPlatformer.ECS;
 
 namespace VaniaPlatformer;
 
     public class Camera2D {
 
     // Fields
-    private Actor target;
+    private Entity target;
     private Vector2 stageSize;
     private float cameraMoveSpeed;
     private float cameraSnapDistance;
@@ -54,7 +55,7 @@ namespace VaniaPlatformer;
         }
     }
 
-    public Camera2D(Actor target, int stageWidth, int stageHeight, float cameraMovespeed = 2.0f) {
+    public Camera2D(Entity target, int stageWidth, int stageHeight, float cameraMovespeed = 2.0f) {
         this.target = target;
         this.stageSize = new Vector2( stageWidth, stageHeight);
         this.cameraMoveSpeed = cameraMovespeed;
@@ -66,8 +67,8 @@ namespace VaniaPlatformer;
         Random rnd = new Random();
         shakeDirection = rnd.Next( 0, 360 );
 
-        if(target.GetType() == typeof(Player)) {
-            Player player = (Player)target;
+        if(target.GetType() == typeof(PlayerEntity)) {
+            PlayerEntity player = (PlayerEntity)target;
             player.HeadBonked += OnPlayerHeadBonked;
         }
     }
@@ -190,7 +191,15 @@ namespace VaniaPlatformer;
             }
         }
 
-        CenterOn(target.Origin);
+        Vector2 targetPosition = target.GetComponent<TransformComponent>().Position;
+        var sprite = target.GetComponent<SpriteComponent>();
+
+        if(sprite != null) 
+        {
+            targetPosition = new Vector2(targetPosition.X + sprite.Origin.X, targetPosition.Y + sprite.Origin.Y);
+        }
+
+        CenterOn(targetPosition);
     }
 
     public void ShakeCamera( int shakeStrength ) {

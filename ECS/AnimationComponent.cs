@@ -29,7 +29,7 @@ public class AnimationComponent : Component
     public Loop LoopType = Loop.None;
 
     // Constructors
-    public AnimationComponent(Rectangle firstFrame, int frames, float frameTime, Loop loopType = Loop.None)
+    public AnimationComponent(SpriteComponent spriteComponent, Rectangle firstFrame, int frames, float frameTime, Loop loopType = Loop.None)
     {
         this.Frame = firstFrame;
         this.Frames = frames;
@@ -42,7 +42,7 @@ public class AnimationComponent : Component
         this.firstFramePosition = new Vector2(Frame.X, Frame.Y);
         this.firstFrameSize = new Vector2(Frame.Width, Frame.Height);
 
-        Entity.GetComponent<SpriteComponent>().Origin = new Vector2(
+        spriteComponent.Origin = new Vector2(
             Frame.Width / 2,
             Frame.Height / 2
         );

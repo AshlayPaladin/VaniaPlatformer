@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 
 namespace VaniaPlatformer.ECS;
@@ -25,6 +26,8 @@ public class ColliderComponent : Component {
     {
         Collider = collider;
         OnColliderChanged();
+
+        ColliderSystem.Register(this);
     }
 
     // Methods
@@ -39,13 +42,13 @@ public class ColliderComponent : Component {
         }
     }
 
-    public void Intersects(Rectangle rectangle)
+    public void Intersects(ColliderComponent component)
     {
-        Rectangle collision = Rectangle.Intersect(Collider, rectangle);
-        
+        Rectangle collision = Rectangle.Intersect(Collider, component.Collider);
+
         if(collision != Rectangle.Empty) 
         {
-            OnCollision(collision);
+            this.OnCollision(collision);
         }
     }
 

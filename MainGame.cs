@@ -6,6 +6,7 @@ using TiledMapLib;
 using Newtonsoft.Json;
 using System.IO;
 using System;
+using VaniaPlatformer.ECS;
 
 namespace VaniaPlatformer;
 
@@ -15,8 +16,8 @@ public class MainGame : Game
     // Properties
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private Player _testPlayer;
-    private List<SolidActor> solidActors = new List<SolidActor>();
+    private PlayerEntity _testPlayer;
+    private List<SolidEntity> solidEntities = new List<SolidEntity>();
 
     private TiledMap _testTilemap;
     private Camera2D _camera;
@@ -50,8 +51,6 @@ public class MainGame : Game
         string tiledMapJson = File.ReadAllText("../../../Content/tiledMaps/debugStage.json");
         _testTilemap = JsonConvert.DeserializeObject<TiledMap>(tiledMapJson);
 
-        //_graphics.PreferredBackBufferWidth = _testTilemap.Width * _testTilemap.TileWidth;
-        //_graphics.PreferredBackBufferHeight = _testTilemap.Height * _testTilemap.TileWidth;
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
         _graphics.ApplyChanges();
@@ -64,8 +63,7 @@ public class MainGame : Game
                 {
                     foreach(var o in layer.TiledObjects) 
                     {
-                        SolidActor newSolidActor = new SolidActor(new Vector2(o.X, o.Y), o.Width, o.Height);
-                        solidActors.Add(newSolidActor);
+                        solidEntities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height));
                     }
 
                     continue;
@@ -79,7 +77,7 @@ public class MainGame : Game
                         {
                             case "PlayerSpawn" : 
                             {
-                                _testPlayer = new Player(32, 48, o.X, o.Y);
+                                _testPlayer = new PlayerEntity(32, 48, o.X, o.Y);
                                 break;
                             }
                             default:
@@ -93,12 +91,6 @@ public class MainGame : Game
                 }
             }
         }
-
-        if(solidActors.Count > 0) {
-            foreach(var solidActor in solidActors) {
-                _testPlayer.IsMoving += solidActor.OnPlayerMoved;
-            }
-        }
         
         _camera = new Camera2D(_testPlayer, _testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileHeight);
         _camera.SetViewportSize(_graphics.GraphicsDevice.Viewport.Width, _graphics.GraphicsDevice.Viewport.Height);
@@ -109,7 +101,6 @@ public class MainGame : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-
     }
 
     protected override void Update(GameTime gameTime)
@@ -131,16 +122,13 @@ public class MainGame : Game
             tildePressed = false;
         }
 
-        if(Keyboard.GetState().IsKeyDown(Keys.LeftShift) &&
-        Keyboard.GetState().IsKeyDown(Keys.LeftControl) &&
-        Keyboard.GetState().IsKeyDown(Keys.S) &&
-        _camera.IsScreenShaking == false) {
-            Random rnd = new Random();
-            _camera.ShakeCamera(rnd.Next(8, 128));
-        }
-
         _testPlayer.Update();
         _camera.Update();
+
+        TransformSystem.Update();
+        ColliderSystem.Update();
+        MoveSystem.Update();
+        AnimationSystem.Update();
 
         base.Update(gameTime);
     }
@@ -155,13 +143,14 @@ public class MainGame : Game
         _testTilemap.RenderMap(_spriteBatch);
         _testPlayer.Draw(_spriteBatch);
 
-        if(debugEnabled[0] && solidActors.Count > 0) {
-            foreach(var solid in solidActors) {
+        if(debugEnabled[0] && solidEntities.Count > 0) {
+            foreach(var solid in solidEntities) {
                 solid.Draw(_spriteBatch);
             }
         }
 
         //_camera.Draw(_spriteBatch);
+        DrawSystem.Draw(_spriteBatch);
 
         base.Draw(gameTime);
 

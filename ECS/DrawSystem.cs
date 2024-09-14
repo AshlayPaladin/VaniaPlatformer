@@ -6,7 +6,7 @@ namespace VaniaPlatformer.ECS;
 public class DrawSystem : BaseSystem<SpriteComponent> 
 {
     // Methods
-    public void Draw(SpriteBatch spriteBatch) {
+    public static void Draw(SpriteBatch spriteBatch) {
         
         foreach(SpriteComponent c in components) {
             c.Draw(spriteBatch);
