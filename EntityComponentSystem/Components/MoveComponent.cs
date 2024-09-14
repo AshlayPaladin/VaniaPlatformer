@@ -54,7 +54,7 @@ public class MoveComponent : Component
         {
             if(collider != null)
             {
-                if(!ColliderSystem.CheckForAnyCollision(collider.BottomCollider))
+                if(!ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider))
                 {
                     // We're set as OnGround, but nothing is under us, Begin CoyoteTime!
                     // Nothing below us, begin Coyote Time countdown before setting OnGround
@@ -114,27 +114,6 @@ public class MoveComponent : Component
         }
     }
 
-    public void Stop() 
-    {
-        CurrentMoveSpeed = 0f;
-    }
-
-    public void Accelerate() 
-    {
-        if(CurrentMoveSpeed < MaxMoveSpeed) 
-        {
-            CurrentMoveSpeed += CurrentAcceleration;
-        }
-    }
-
-    public void Decelerate() 
-    {
-        if(CurrentMoveSpeed > 0) 
-        {
-            CurrentMoveSpeed /= 1.15f;
-        }
-    }
-
     public void Jump() 
     {
         float jumpVelocity = -(JumpSpeed * Globals.DeltaTime);
@@ -144,65 +123,68 @@ public class MoveComponent : Component
         OnGround = false;
     }
 
-    public void OnCollision(object o, CollisionEventArgs args) 
+    public void OnCollision(object sender, CollisionEventArgs args) 
     {
-        var transform = Entity.GetComponent<TransformComponent>();
-        var playerCollider = Entity.GetComponent<ColliderComponent>().Collider;
-
-        if(args.CollisionRectangle.Height >= args.CollisionRectangle.Width) 
+        if(args.CollisionComponent.Entity.GetType() == typeof(SolidEntity))
         {
-            float leftDiff = Math.Abs(args.CollisionRectangle.Left - playerCollider.Left);
-            float rightDiff = Math.Abs(args.CollisionRectangle.Right - playerCollider.Right);
+            var transform = Entity.GetComponent<TransformComponent>();
+            var myCollider = Entity.GetComponent<ColliderComponent>().Collider;
 
-            if(leftDiff <= rightDiff) {
-                // Collision is on our LEFT side
-                float collisionProposedX = transform.Position.X + args.CollisionRectangle.Width;
+            if(args.CollisionRectangle.Height >= args.CollisionRectangle.Width) 
+            {
+                float leftDiff = Math.Abs(args.CollisionRectangle.Left - myCollider.Left);
+                float rightDiff = Math.Abs(args.CollisionRectangle.Right - myCollider.Right);
 
-                transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
-            } 
-            else if (rightDiff < leftDiff) {
-                // Collision is on our RIGHT side
-                float collisionProposedX = transform.Position.X - args.CollisionRectangle.Width;
+                if(leftDiff <= rightDiff) {
+                    // Collision is on our LEFT side
+                    float collisionProposedX = transform.Position.X + args.CollisionRectangle.Width;
 
-                transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
+                    transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
+                } 
+                else if (rightDiff < leftDiff) {
+                    // Collision is on our RIGHT side
+                    float collisionProposedX = transform.Position.X - args.CollisionRectangle.Width;
+
+                    transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
+                }
+
+                Velocity = new Vector2(0, Velocity.Y);
+            }
+            else 
+            {
+                float topDiff = Math.Abs(args.CollisionRectangle.Top - myCollider.Top);
+                float bottomDiff = Math.Abs(args.CollisionRectangle.Bottom - myCollider.Bottom);
+
+                if(bottomDiff <= topDiff) {
+                    // Collision is BELOW Player
+                    float collisionProposedY = transform.Position.Y - args.CollisionRectangle.Height;
+
+                    transform.Position = new Vector2(transform.Position.X, collisionProposedY);
+
+                    OnGround = true;
+                }
+                else if (topDiff < bottomDiff) {
+                    // Collision is ABOVE Player
+                    float collisionProposedY = transform.Position.Y + args.CollisionRectangle.Height;
+
+                    transform.Position = new Vector2(transform.Position.X, collisionProposedY);
+
+                    OnGround = false;
+                }
+
+                Velocity = new Vector2(Velocity.X, 0);
             }
 
-            Velocity = new Vector2(0, Velocity.Y);
-        }
-        else 
-        {
-            float topDiff = Math.Abs(args.CollisionRectangle.Top - playerCollider.Top);
-            float bottomDiff = Math.Abs(args.CollisionRectangle.Bottom - playerCollider.Bottom);
-
-            if(bottomDiff <= topDiff) {
-                // Collision is BELOW Player
-                float collisionProposedY = transform.Position.Y - args.CollisionRectangle.Height;
-
-                transform.Position = new Vector2(transform.Position.X, collisionProposedY);
-
-                OnGround = true;
+            var collider = Entity.GetComponent<ColliderComponent>();
+            if(collider != null) 
+            {
+                collider.Collider = new Rectangle(
+                    (int)transform.Position.X,
+                    (int)transform.Position.Y,
+                    collider.Collider.Width,
+                    collider.Collider.Height
+                );
             }
-            else if (topDiff < bottomDiff) {
-                // Collision is ABOVE Player
-                float collisionProposedY = transform.Position.Y + args.CollisionRectangle.Height;
-
-                transform.Position = new Vector2(transform.Position.X, collisionProposedY);
-
-                OnGround = false;
-            }
-
-            Velocity = new Vector2(Velocity.X, 0);
-        }
-
-        var collider = Entity.GetComponent<ColliderComponent>();
-        if(collider != null) 
-        {
-            collider.Collider = new Rectangle(
-                (int)transform.Position.X,
-                (int)transform.Position.Y,
-                collider.Collider.Width,
-                collider.Collider.Height
-            );
         }
     }
 }

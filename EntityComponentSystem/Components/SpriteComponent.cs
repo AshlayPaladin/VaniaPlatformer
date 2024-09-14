@@ -47,7 +47,7 @@ public class SpriteComponent : Component {
         }
         else 
         {
-            spriteBatch.Draw(Texture, t.Position + Origin, Color.White);
+            spriteBatch.Draw(Texture, t.Position, Color.White);
         }
     }
 }

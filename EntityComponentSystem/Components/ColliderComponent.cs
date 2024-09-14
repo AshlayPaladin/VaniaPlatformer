@@ -54,8 +54,8 @@ public class ColliderComponent : Component {
 
     public void OnCollision(ColliderComponent component, Rectangle collision) 
     {
-        component.Collided?.Invoke(this, new CollisionEventArgs(collision));
-        Collided?.Invoke(this, new CollisionEventArgs(collision));
+        component.Collided?.Invoke(this, new CollisionEventArgs(this, collision));
+        Collided?.Invoke(this, new CollisionEventArgs(component, collision));
     }
 
     public void OnColliderChanged() 

@@ -16,7 +16,7 @@ public class ColliderSystem : BaseSystem<ColliderComponent>
 
         // Check for any collisions between all ColliderComponents in the system
         for(int i = 0; i < components.Count - 1; i++) {
-            for(int j = 1; j < components.Count; j++) {
+            for(int j = i + 1; j < components.Count; j++) {
                 components.ElementAt(i).Intersects(components.ElementAt(j));
             }
         }
@@ -31,6 +31,25 @@ public class ColliderSystem : BaseSystem<ColliderComponent>
                 if(c.Collider.Intersects(collider))
                 {
                     return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public static bool CheckForEntityCollision<T>(Rectangle collider) where T : Entity
+    {
+        foreach(var c in components)
+        {
+            if(c.Entity.GetType() == typeof(T))
+            {
+                if(c.Collider != collider)
+                {
+                    if(c.Collider.Intersects(collider))
+                    {
+                        return true;
+                    }
                 }
             }
         }

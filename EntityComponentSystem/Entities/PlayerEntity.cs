@@ -63,9 +63,7 @@ public class PlayerEntity : Entity {
     }
 
     // Methods
-
     public void Draw(SpriteBatch spriteBatch) {
-        //animationManager.Draw(spriteBatch, boundingBox, Color.White);
         spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().Collider, Color.Yellow * 0.5f);
         spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().BottomCollider, Color.Red * 0.5f);
         spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().LeftCollider, Color.Red * 0.5f);
@@ -93,7 +91,7 @@ public class PlayerEntity : Entity {
 
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
         if(input.IsLeftKeyDown) {
-            if(ColliderSystem.CheckForAnyCollision(collider.LeftCollider))
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider))
             {
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
                 movement.CurrentMoveSpeed = 0;
@@ -120,7 +118,7 @@ public class PlayerEntity : Entity {
         if(input.IsRightKeyDown) {
 
             // If the ColliderSystem returns true, we are against a wall on our right already
-            if(ColliderSystem.CheckForAnyCollision(collider.RightCollider)) {
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.RightCollider)) {
                 // Set horizontal velocity to 0, we will not move if there is a wall in our way
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
                 movement.CurrentMoveSpeed = 0;

@@ -18,6 +18,7 @@ public class MainGame : Game
     private SpriteBatch _spriteBatch;
     private PlayerEntity _testPlayer;
     private List<SolidEntity> solidEntities = new List<SolidEntity>();
+    private List<EnemyEntity> enemies = new List<EnemyEntity>();
 
     private TiledMap _testTilemap;
     private Camera2D _camera;
@@ -80,6 +81,11 @@ public class MainGame : Game
                                 _testPlayer = new PlayerEntity(32, 48, o.X, o.Y);
                                 break;
                             }
+                            case "ActorSpawn" :
+                            {
+                                enemies.Add(new EnemyEntity(o.Width, o.Height, o.X, o.Y));
+                                break;
+                            }
                             default:
                             {
                                 break;
@@ -131,6 +137,11 @@ public class MainGame : Game
         _testPlayer.Update();
         _camera.Update();
 
+        foreach(var enemy in enemies) 
+        {
+            enemy.Update();
+        }
+
         base.Update(gameTime);
     }
 
@@ -143,6 +154,11 @@ public class MainGame : Game
 
         _testTilemap.RenderMap(_spriteBatch);
         _testPlayer.Draw(_spriteBatch);
+
+        foreach(var enemy in enemies)
+        {
+            enemy.Draw(_spriteBatch);
+        }
 
         if(debugEnabled[0] && solidEntities.Count > 0) {
             foreach(var solid in solidEntities) {

@@ -19,6 +19,17 @@
                  "value":true
                 }, 
                 {
+                 "name":"ParallaxForwardDirection",
+                 "propertytype":"ParallaxDirection",
+                 "type":"string",
+                 "value":"Left"
+                }, 
+                {
+                 "name":"ParallaxSpeed",
+                 "type":"float",
+                 "value":0
+                }, 
+                {
                  "name":"ParallaxWithPlayer",
                  "type":"bool",
                  "value":true
@@ -430,6 +441,24 @@
                  "width":32,
                  "x":64,
                  "y":544
+                }, 
+                {
+                 "height":32,
+                 "id":50,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"ActorType",
+                         "propertytype":"ActorType",
+                         "type":"string",
+                         "value":"MushroomEnemy"
+                        }],
+                 "rotation":0,
+                 "type":"ActorSpawn",
+                 "visible":true,
+                 "width":32,
+                 "x":352,
+                 "y":576
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -438,7 +467,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":41,
+ "nextobjectid":51,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.0",
