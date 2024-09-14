@@ -15,10 +15,6 @@ public class PlayerEntity : Entity {
 
     // Fields
     private string textureSheetId;
-    private bool isLeftKeyPressed;
-    private bool isRightKeyPressed;
-    private bool isJumpKeyPressed;
-    private bool isRunKeyPressed;
 
     // Properties
 
