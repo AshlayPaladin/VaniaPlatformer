@@ -6,52 +6,25 @@ using VaniaPlatformer.ECS;
 
 namespace VaniaPlatformer;
 
-public class PlayerEntity : Entity {
+public class PlayerEntity : GameActorEntity {
     
     // Constants
 
     // Events
     public event EventHandler HeadBonked;
 
-    // Fields
-    private string textureSheetId;
-
     // Properties
 
     // Constructors
-    public PlayerEntity(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0) {
-
-        textureSheetId = "textures/AdventurerSheet";
-
-        AddComponent(
-            new TransformComponent(
-                new Vector2(startX, startY),
-                new Vector2(1, 1)
-            )
-        );
-
-        AddComponent(
-            new SpriteComponent(
-                Globals.Content.Load<Texture2D>(textureSheetId)
-            )
-        );
-
+    public PlayerEntity(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0, string textureAssetId = "") 
+        : base(collisionWidth, collisionHeight, startX, startY, textureAssetId)
+    {
         AddComponent(
             new AnimationComponent(
                 GetComponent<SpriteComponent>(),
                 new Rectangle(50, 38, 50, 37),
                 6, 0.05f, AnimationComponent.Loop.Reverse
             )
-        );
-
-        AddComponent(
-            new ColliderComponent(
-                new Rectangle(startX, startY, collisionWidth, collisionHeight)
-            )
-        );
-
-        AddComponent(
-            new MoveComponent()
         );
 
         AddComponent(
@@ -71,7 +44,7 @@ public class PlayerEntity : Entity {
         spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().TopCollider, Color.Red * 0.5f);
     }
 
-    public void Update() {
+    public override void Update() {
         MoveComponent movement = GetComponent<MoveComponent>();
         ColliderComponent collider = GetComponent<ColliderComponent>();
         InputComponent input = GetComponent<InputComponent>();
@@ -91,7 +64,7 @@ public class PlayerEntity : Entity {
 
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
         if(input.IsLeftKeyDown) {
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider))
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider) != null)
             {
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
                 movement.CurrentMoveSpeed = 0;
@@ -118,10 +91,11 @@ public class PlayerEntity : Entity {
         if(input.IsRightKeyDown) {
 
             // If the ColliderSystem returns true, we are against a wall on our right already
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.RightCollider)) {
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.RightCollider) != null) {
                 // Set horizontal velocity to 0, we will not move if there is a wall in our way
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
                 movement.CurrentMoveSpeed = 0;
+                
             } 
             else {
                 // If no collisions are detected, we are free to begin moving
@@ -155,6 +129,14 @@ public class PlayerEntity : Entity {
         // End Jump Premature if Jump Key is Released before reaching max jump height
         if(!input.IsJumpKeyDown && !movement.OnGround && movement.Velocity.Y < 0) {
             movement.Velocity = new Vector2(movement.Velocity.X, 0);
+        }
+
+        // Move with Moving Platform
+        var platformEntity = ColliderSystem.CheckForEntityCollision<MovingPlatformEntity>(collider.BottomCollider);
+        if(platformEntity != null) {
+            // We are on a moving platform here
+            Vector2 platformVelocity = platformEntity.GetComponent<MoveComponent>().Velocity;
+            movement.Velocity += platformVelocity;
         }
 
         // TODO: Adjust SpriteEffects and AnimationComponent based on Movement

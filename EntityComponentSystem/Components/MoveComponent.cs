@@ -23,6 +23,7 @@ public class MoveComponent : Component
     public float EffectiveGravity = 0.35f;
     public bool IsRunning = false;
     public bool OnGround = false;
+    public bool IsFlying = false;
 
     // Constructor
     public MoveComponent()
@@ -39,44 +40,47 @@ public class MoveComponent : Component
         ColliderComponent collider = Entity.GetComponent<ColliderComponent>();
 
         // Add Gravity to Falling, if we are in the air
-        if(!OnGround)
+        if(!IsFlying)
         {
-            float currentFallSpeed = Velocity.Y;
-
-            if(currentFallSpeed < MaxFallSpeed)
+            if(!OnGround)
             {
-                currentFallSpeed += EffectiveGravity;
+                float currentFallSpeed = Velocity.Y;
 
-                Velocity = new Vector2(Velocity.X, currentFallSpeed);
-            }
-        }
-        else
-        {
-            if(collider != null)
-            {
-                if(!ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider))
+                if(currentFallSpeed < MaxFallSpeed)
                 {
-                    // We're set as OnGround, but nothing is under us, Begin CoyoteTime!
-                    // Nothing below us, begin Coyote Time countdown before setting OnGround
-                    if(coyoteTimer > 0) {
-                        coyoteTimer -= Globals.DeltaTime;
+                    currentFallSpeed += EffectiveGravity;
+
+                    Velocity = new Vector2(Velocity.X, currentFallSpeed);
+                }
+            }
+            else
+            {
+                if(collider != null)
+                {
+                    if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider) == null)
+                    {
+                        // We're set as OnGround, but nothing is under us, Begin CoyoteTime!
+                        // Nothing below us, begin Coyote Time countdown before setting OnGround
+                        if(coyoteTimer > 0) {
+                            coyoteTimer -= Globals.DeltaTime;
+                        }
+                        else {
+                            OnGround = false;
+                            coyoteTimer = CoyoteTime;
+                        }
+
+                        // Begin falling immediately, but still be considered "onGround" so player can still jump
+                        float currentFallSpeed = Velocity.Y;
+
+                        if(currentFallSpeed < MaxFallSpeed) {
+                            currentFallSpeed += EffectiveGravity;
+
+                            Velocity = new Vector2(Velocity.X, currentFallSpeed);
+                        }
                     }
                     else {
-                        OnGround = false;
                         coyoteTimer = CoyoteTime;
                     }
-
-                    // Begin falling immediately, but still be considered "onGround" so player can still jump
-                    float currentFallSpeed = Velocity.Y;
-
-                    if(currentFallSpeed < MaxFallSpeed) {
-                        currentFallSpeed += EffectiveGravity;
-
-                        Velocity = new Vector2(Velocity.X, currentFallSpeed);
-                    }
-                }
-                else {
-                    coyoteTimer = CoyoteTime;
                 }
             }
         }
@@ -125,30 +129,37 @@ public class MoveComponent : Component
 
     public void OnCollision(object sender, CollisionEventArgs args) 
     {
-        if(args.CollisionComponent.Entity.GetType() == typeof(SolidEntity))
+        Type entityType = args.CollisionComponent.Entity.GetType();
+
+        if(entityType == typeof(SolidEntity) ||
+            entityType == typeof(MovingPlatformEntity) || 
+            entityType == typeof(OneWaySolidEntity))
         {
             var transform = Entity.GetComponent<TransformComponent>();
             var myCollider = Entity.GetComponent<ColliderComponent>().Collider;
 
             if(args.CollisionRectangle.Height >= args.CollisionRectangle.Width) 
             {
-                float leftDiff = Math.Abs(args.CollisionRectangle.Left - myCollider.Left);
-                float rightDiff = Math.Abs(args.CollisionRectangle.Right - myCollider.Right);
+                if(entityType == typeof(SolidEntity))
+                {
+                    float leftDiff = Math.Abs(args.CollisionRectangle.Left - myCollider.Left);
+                    float rightDiff = Math.Abs(args.CollisionRectangle.Right - myCollider.Right);
 
-                if(leftDiff <= rightDiff) {
-                    // Collision is on our LEFT side
-                    float collisionProposedX = transform.Position.X + args.CollisionRectangle.Width;
+                    if(leftDiff <= rightDiff) {
+                        // Collision is on Entity LEFT side
+                        float collisionProposedX = transform.Position.X + args.CollisionRectangle.Width;
 
-                    transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
-                } 
-                else if (rightDiff < leftDiff) {
-                    // Collision is on our RIGHT side
-                    float collisionProposedX = transform.Position.X - args.CollisionRectangle.Width;
+                        transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
+                    } 
+                    else if (rightDiff < leftDiff) {
+                        // Collision is on Entity RIGHT side
+                        float collisionProposedX = transform.Position.X - args.CollisionRectangle.Width;
 
-                    transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
+                        transform.Position = new Vector2(collisionProposedX, transform.Position.Y);
+                    }
+
+                    Velocity = new Vector2(0, Velocity.Y);
                 }
-
-                Velocity = new Vector2(0, Velocity.Y);
             }
             else 
             {
@@ -156,23 +167,49 @@ public class MoveComponent : Component
                 float bottomDiff = Math.Abs(args.CollisionRectangle.Bottom - myCollider.Bottom);
 
                 if(bottomDiff <= topDiff) {
-                    // Collision is BELOW Player
-                    float collisionProposedY = transform.Position.Y - args.CollisionRectangle.Height;
+                    // Collision is BELOW Entity
+                    if(entityType == typeof(OneWaySolidEntity))
+                    {
+                        // Only apply solid characteristics if the OneWay is below us
+                        if(Velocity.Y > 0 && Math.Abs(Entity.GetComponent<ColliderComponent>().Collider.Bottom - args.CollisionRectangle.Top) <= 8)
+                        {
+                            // One-Way Solid
+                            float collisionProposedY = transform.Position.Y - args.CollisionRectangle.Height;
 
-                    transform.Position = new Vector2(transform.Position.X, collisionProposedY);
+                            transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                    OnGround = true;
+                            OnGround = true;
+
+                            Velocity = new Vector2(Velocity.X, 0);
+                        }
+                    }
+                    else
+                    {
+                        // Other Solid (e.g. MovingPlatform)
+                        float collisionProposedY = transform.Position.Y - args.CollisionRectangle.Height;
+
+                        transform.Position = new Vector2(transform.Position.X, collisionProposedY);
+
+                        OnGround = true;
+
+                        Velocity = new Vector2(Velocity.X, 0);
+                    }
                 }
                 else if (topDiff < bottomDiff) {
-                    // Collision is ABOVE Player
-                    float collisionProposedY = transform.Position.Y + args.CollisionRectangle.Height;
+                    // Collision is ABOVE Entity
 
-                    transform.Position = new Vector2(transform.Position.X, collisionProposedY);
+                    if(entityType == typeof(SolidEntity))
+                    {
+                        float collisionProposedY = transform.Position.Y + args.CollisionRectangle.Height;
 
-                    OnGround = false;
+                        transform.Position = new Vector2(transform.Position.X, collisionProposedY);
+
+                        OnGround = false;
+
+                        Velocity = new Vector2(Velocity.X, 0);
+                    }
+                    
                 }
-
-                Velocity = new Vector2(Velocity.X, 0);
             }
 
             var collider = Entity.GetComponent<ColliderComponent>();

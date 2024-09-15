@@ -73,6 +73,18 @@
 /processorParam:TextureFormat=Color
 /build:textures/debugTileset.png
 
+#begin textures/MovingPlatform.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/MovingPlatform.png
+
 #begin textures/TestEnemy.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -84,18 +96,6 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:textures/TestEnemy.png
-
-#begin textures/TestTiles.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:textures/TestTiles.png
 
 #begin textures/tilesets/TestTiles.png
 /importer:TextureImporter

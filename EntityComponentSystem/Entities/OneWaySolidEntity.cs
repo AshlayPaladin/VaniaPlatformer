@@ -4,14 +4,13 @@ using VaniaPlatformer.ECS;
 
 namespace VaniaPlatformer;
 
-public class SolidEntity : Entity {
+public class OneWaySolidEntity : Entity {
 
     // Fields
     private Color drawColor;
 
     // Constructor
-    public SolidEntity(Vector2 position, int width, int height) {
-
+    public OneWaySolidEntity(Vector2 position, int width, int height) {
 
         AddComponent(
             new ColliderComponent(
@@ -24,7 +23,8 @@ public class SolidEntity : Entity {
             )
         );
 
-        drawColor = Color.Red;
+        drawColor = Color.Green;
+        
     }
 
     public void Draw(SpriteBatch spriteBatch) {

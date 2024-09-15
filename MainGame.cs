@@ -17,8 +17,8 @@ public class MainGame : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private PlayerEntity _testPlayer;
-    private List<SolidEntity> solidEntities = new List<SolidEntity>();
-    private List<EnemyEntity> enemies = new List<EnemyEntity>();
+    private List<Entity> entities = new List<Entity>();
+    private List<GameActorEntity> actorEntities = new List<GameActorEntity>();
 
     private TiledMap _testTilemap;
     private Camera2D _camera;
@@ -49,7 +49,7 @@ public class MainGame : Game
         tildePressed = false;
 
         // TODO: Initialize our Test TiledMap here
-        string tiledMapJson = File.ReadAllText("../../../Content/tiledMaps/debugStage.json");
+        string tiledMapJson = File.ReadAllText("../../../Content/tiledMaps/debugStage2.json");
         _testTilemap = JsonConvert.DeserializeObject<TiledMap>(tiledMapJson);
 
         _graphics.PreferredBackBufferWidth = 1920;
@@ -64,7 +64,19 @@ public class MainGame : Game
                 {
                     foreach(var o in layer.TiledObjects) 
                     {
-                        solidEntities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height));
+                        switch(o.Type)
+                        {
+                            case "OneWaySolidActor" :
+                            {
+                                entities.Add(new OneWaySolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height));
+                                break;
+                            }
+                            default:
+                            {
+                                entities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height));
+                                break;
+                            }
+                        }
                     }
 
                     continue;
@@ -78,12 +90,17 @@ public class MainGame : Game
                         {
                             case "PlayerSpawn" : 
                             {
-                                _testPlayer = new PlayerEntity(32, 48, o.X, o.Y);
+                                _testPlayer = new PlayerEntity(32, 48, o.X, o.Y, "textures/AdventurerSheet");
                                 break;
                             }
                             case "ActorSpawn" :
                             {
-                                enemies.Add(new EnemyEntity(o.Width, o.Height, o.X, o.Y));
+                                actorEntities.Add(new EnemyEntity(o.Width, o.Height, o.X, o.Y, "textures/TestEnemy"));
+                                break;
+                            }
+                            case "MovingPlatform" :
+                            {
+                                actorEntities.Add(new MovingPlatformEntity(o.Width, o.Height, o.X, o.Y, "textures/MovingPlatform"));
                                 break;
                             }
                             default:
@@ -137,9 +154,9 @@ public class MainGame : Game
         _testPlayer.Update();
         _camera.Update();
 
-        foreach(var enemy in enemies) 
+        foreach(var entity in actorEntities) 
         {
-            enemy.Update();
+            entity.Update();
         }
 
         base.Update(gameTime);
@@ -155,14 +172,24 @@ public class MainGame : Game
         _testTilemap.RenderMap(_spriteBatch);
         _testPlayer.Draw(_spriteBatch);
 
-        foreach(var enemy in enemies)
+        foreach(var actorEntity in actorEntities)
         {
-            enemy.Draw(_spriteBatch);
+            if(actorEntity.GetType() == typeof(EnemyEntity))
+            {
+                EnemyEntity enemy = actorEntity as EnemyEntity;
+                enemy.Draw(_spriteBatch);
+            }
+            
         }
 
-        if(debugEnabled[0] && solidEntities.Count > 0) {
-            foreach(var solid in solidEntities) {
-                solid.Draw(_spriteBatch);
+        if(debugEnabled[0] && entities.Count > 0) {
+            foreach(var solid in entities) {
+
+                if(solid.GetType() == typeof(SolidEntity)){
+                    SolidEntity solidEntity = solid as SolidEntity;
+                    solidEntity.Draw(_spriteBatch);
+                }
+                
             }
         }
 

@@ -38,7 +38,7 @@ public class ColliderSystem : BaseSystem<ColliderComponent>
         return false;
     }
 
-    public static bool CheckForEntityCollision<T>(Rectangle collider) where T : Entity
+    public static T CheckForEntityCollision<T>(Rectangle collider) where T : Entity
     {
         foreach(var c in components)
         {
@@ -48,12 +48,12 @@ public class ColliderSystem : BaseSystem<ColliderComponent>
                 {
                     if(c.Collider.Intersects(collider))
                     {
-                        return true;
+                        return (T)c.Entity;
                     }
                 }
             }
         }
 
-        return false;
+        return null;
     }
 }
