@@ -148,7 +148,7 @@ namespace VaniaPlatformer;
             newPositionY = (int)Globals.Lerp(Position.Y, position.Y, cameraMoveSpeed * Globals.DeltaTime);
         }
 
-        Position = new Vector2(newPositionX, newPositionY);
+        Position = new Vector2((int)newPositionX, (int)newPositionY);
     }
 
     // Clamp the camera so it never leaves the visible area of the map.

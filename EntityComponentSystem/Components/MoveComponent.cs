@@ -190,7 +190,7 @@ public class MoveComponent : Component
                     if(entityType == typeof(OneWaySolidEntity))
                     {
                         // Only apply solid characteristics if the OneWay is below us
-                        if(Velocity.Y > 0 && Math.Abs(Entity.GetComponent<ColliderComponent>().Collider.Bottom - args.CollisionRectangle.Top) <= 8)
+                        if(Velocity.Y > 0 && Math.Abs(Entity.GetComponent<ColliderComponent>().Collider.Bottom - args.CollisionRectangle.Top) <= 12)
                         {
                             // One-Way Solid
                             float collisionProposedY = transform.Position.Y - args.CollisionRectangle.Height;

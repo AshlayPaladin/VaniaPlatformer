@@ -13,6 +13,16 @@ namespace VaniaPlatformer;
 public class MainGame : Game
 {
 
+    // Constants
+    private const int VIRTUAL_WINDOW_WIDTH = 640;
+    private const int VIRTUAL_WINDOW_HEIGHT = 320;
+    private const int WINDOW_WIDTH = 1280;
+    private const int WINDOW_HEIGHT = 720;
+    
+
+    // Fields
+    private Rectangle viewport;
+
     // Properties
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
@@ -22,6 +32,8 @@ public class MainGame : Game
 
     private TiledMap _testTilemap;
     private Camera2D _camera;
+
+    private RenderTarget2D renderTarget2D;
 
     // Debug Fields
     private bool[] debugEnabled;
@@ -52,9 +64,20 @@ public class MainGame : Game
         string tiledMapJson = File.ReadAllText("../../../Content/tiledMaps/debugStage2.json");
         _testTilemap = JsonConvert.DeserializeObject<TiledMap>(tiledMapJson);
 
-        _graphics.PreferredBackBufferWidth = 1920;
-        _graphics.PreferredBackBufferHeight = 1080;
+        _graphics.PreferredBackBufferWidth = WINDOW_WIDTH;
+        _graphics.PreferredBackBufferHeight = WINDOW_HEIGHT;
+        _graphics.SynchronizeWithVerticalRetrace = true;
         _graphics.ApplyChanges();
+
+        renderTarget2D = new RenderTarget2D(
+            GraphicsDevice,
+            640,
+            320,
+            false,
+            GraphicsDevice.PresentationParameters.BackBufferFormat,
+            DepthFormat.Depth24);
+
+        CalculateViewport();
 
         Globals.SetActiveTileset(_testTilemap.TiledMapTilesets[0]);
 
@@ -119,7 +142,7 @@ public class MainGame : Game
         }
         
         _camera = new Camera2D(_testPlayer, _testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileHeight);
-        _camera.SetViewportSize(_graphics.GraphicsDevice.Viewport.Width, _graphics.GraphicsDevice.Viewport.Height);
+        _camera.SetViewportSize((int)Globals.GraphicsScreenSize.X, (int)Globals.GraphicsScreenSize.Y);
 
         base.Initialize();
     }
@@ -168,10 +191,26 @@ public class MainGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        DrawSceneToTexture(renderTarget2D);
 
-        // TODO: Add your drawing code here
-        _spriteBatch.Begin(transformMatrix: _camera.TranslationMatrix);
+        GraphicsDevice.Clear(Color.Black);
+
+        _spriteBatch.Begin();
+
+        _spriteBatch.Draw(renderTarget2D, new Rectangle(viewport.X, viewport.Y, viewport.Width, viewport.Height), Color.White);
+
+        base.Draw(gameTime);
+
+        _spriteBatch.End();
+    }
+
+    private void DrawSceneToTexture(RenderTarget2D renderTarget)
+    {
+        GraphicsDevice.SetRenderTarget(renderTarget);
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        //GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
+
+        _spriteBatch.Begin(samplerState:SamplerState.PointClamp, transformMatrix: _camera.TranslationMatrix);
 
         _testTilemap.RenderMap(_spriteBatch);
         _testPlayer.Draw(_spriteBatch);
@@ -199,12 +238,27 @@ public class MainGame : Game
 
         //_camera.Draw(_spriteBatch);
         DrawSystem.Draw(_spriteBatch);
-
-        base.Draw(gameTime);
-
+        
         _spriteBatch.End();
+
+        GraphicsDevice.SetRenderTarget(null);
     }
 
+    protected void CalculateViewport()
+    {
+        float scaleX = WINDOW_WIDTH / VIRTUAL_WINDOW_WIDTH;
+        float scaleY = WINDOW_HEIGHT / VIRTUAL_WINDOW_HEIGHT;
+
+        float viewportScale = scaleX < scaleY ? scaleX : scaleY;
+
+        int viewportWidth = (int)(VIRTUAL_WINDOW_WIDTH * viewportScale);
+        int viewportHeight = (int)(VIRTUAL_WINDOW_HEIGHT * viewportScale);
+
+        int offsetX = WINDOW_WIDTH / 2 - viewportWidth / 2;
+        int offsetY = WINDOW_HEIGHT / 2 - viewportHeight / 2;
+
+        viewport = new Rectangle(offsetX, offsetY, viewportWidth, viewportHeight);
+    }
 
     protected void OnPlayerDeath(object sender, EventArgs args)
     {
