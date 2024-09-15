@@ -78,11 +78,46 @@ public class GameActorEntity : Entity
         movement.Velocity = new Vector2(movement.CurrentMoveSpeed, movement.Velocity.Y);
     }
 
-    public virtual void OnCollision(object sender, CollisionEventArgs args)
+    protected virtual void OnCollision(object sender, CollisionEventArgs args)
     {
         if(args.CollisionComponent.Entity.GetType() == typeof(SolidEntity))
         {
             direction = direction == MoveDirection.Left ? MoveDirection.Right : MoveDirection.Left;
+        }
+    }
+
+    protected virtual void Dispose()
+    {
+        foreach(Component component in Components)
+        {
+            var health = GetComponent<HealthComponent>();
+            var sprite = GetComponent<SpriteComponent>();
+            var animation = GetComponent<AnimationComponent>();
+            var collider = GetComponent<ColliderComponent>();
+
+            if(collider != null) 
+            {
+                ColliderSystem.Deregister(collider);
+                collider = null;
+            }
+
+            if(animation != null)
+            {
+                AnimationSystem.Deregister(animation);
+                animation = null;
+            }
+
+            if(sprite != null)
+            {
+                DrawSystem.Deregister(sprite);
+                sprite = null;
+            }
+
+            if(health != null)
+            {
+                HealthSystem.Deregister(health);
+                health = null;
+            }
         }
     }
 }

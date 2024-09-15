@@ -91,11 +91,14 @@ public class MainGame : Game
                             case "PlayerSpawn" : 
                             {
                                 _testPlayer = new PlayerEntity(32, 48, o.X, o.Y, "textures/AdventurerSheet");
+                                _testPlayer.PlayerKilled += OnPlayerDeath;
                                 break;
                             }
                             case "ActorSpawn" :
                             {
-                                actorEntities.Add(new EnemyEntity(o.Width, o.Height, o.X, o.Y, "textures/TestEnemy"));
+                                EnemyEntity enemy = new EnemyEntity(o.Width, o.Height, o.X, o.Y, "textures/TestEnemy");
+                                enemy.Killed += OnEntityDeath;
+                                actorEntities.Add(enemy);
                                 break;
                             }
                             case "MovingPlatform" :
@@ -150,6 +153,7 @@ public class MainGame : Game
         MoveSystem.Update();
         ColliderSystem.Update();
         AnimationSystem.Update();
+        HealthSystem.Update();
 
         _testPlayer.Update();
         _camera.Update();
@@ -199,5 +203,26 @@ public class MainGame : Game
         base.Draw(gameTime);
 
         _spriteBatch.End();
+    }
+
+
+    protected void OnPlayerDeath(object sender, EventArgs args)
+    {
+        Exit();
+    }
+
+    protected void OnEntityDeath(object sender, EventArgs args)
+    {
+        GameActorEntity entity = sender as GameActorEntity;
+
+        for(int i = actorEntities.Count - 1; i >= 0; i--)
+        {
+            var actor = actorEntities[i];
+            if(actor.ID == entity.ID)
+            {
+                actorEntities.RemoveAt(i);
+                break;
+            }
+        }
     }
 }

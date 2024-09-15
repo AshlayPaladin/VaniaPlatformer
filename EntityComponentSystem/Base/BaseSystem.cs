@@ -22,4 +22,9 @@ public class BaseSystem<T> where T : Component {
             component.Update();
         }
     }
+
+    public static void Deregister(T component)
+    {
+        components.Remove(component);
+    }
 }

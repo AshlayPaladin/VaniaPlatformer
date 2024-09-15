@@ -8,6 +8,9 @@ namespace VaniaPlatformer;
 
 public class PlayerEntity : GameActorEntity {
     
+    // Events
+    public event EventHandler PlayerKilled;
+
     // Constants
 
     // Events
@@ -31,8 +34,14 @@ public class PlayerEntity : GameActorEntity {
             new InputComponent()
         );
 
+        AddComponent(
+            new HealthComponent(3)
+        );
+
         // Connect our ColliderComponent Collided event to the MoveComponent collision correction method
         GetComponent<ColliderComponent>().Collided += GetComponent<MoveComponent>().OnCollision;
+        GetComponent<ColliderComponent>().Collided += OnCollision;
+        GetComponent<HealthComponent>().Killed += OnKilled;
     }
 
     // Methods
@@ -127,7 +136,7 @@ public class PlayerEntity : GameActorEntity {
         }
 
         // End Jump Premature if Jump Key is Released before reaching max jump height
-        if(!input.IsJumpKeyDown && !movement.OnGround && movement.Velocity.Y < 0) {
+        if(!input.IsJumpKeyDown && !movement.OnGround && movement.Velocity.Y < 0 && GetComponent<MoveComponent>().IsBouncing == false) {
             movement.Velocity = new Vector2(movement.Velocity.X, 0);
         }
 
@@ -147,5 +156,37 @@ public class PlayerEntity : GameActorEntity {
 
     protected void OnHeadBonked() {
         HeadBonked?.Invoke(this, null);
+    }
+
+    protected override void OnCollision(object sender, CollisionEventArgs args) 
+    {
+        Entity entity = args.CollisionComponent.Entity;
+
+        if(entity.GetType() == typeof(EnemyEntity)) {
+
+            int bounceCheck = Math.Abs(GetComponent<ColliderComponent>().Collider.Bottom - args.CollisionComponent.Collider.Top);
+
+            if(bounceCheck < 8)
+            {
+                // We hit the enemy's head, so we deal damage
+                // Bounce on Head if we hit his head
+                var enemy = entity as EnemyEntity;
+                enemy.GetComponent<HealthComponent>().Damage();
+
+                GetComponent<MoveComponent>().OnGround = true;
+                GetComponent<MoveComponent>().Bounce();
+            }
+            else
+            {
+                // Take Damage
+                GetComponent<HealthComponent>().Damage(1);
+            }
+            
+        }
+    }
+
+    protected void OnKilled(object sender, EventArgs args)
+    {
+        PlayerKilled?.Invoke(this, null);
     }
 }

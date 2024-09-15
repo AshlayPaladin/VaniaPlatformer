@@ -8,6 +8,7 @@ public class MoveComponent : Component
 {
     // Fields
     private float coyoteTimer;
+    private float bounceTimer = 0f;
 
     // Properties
     public Vector2 Velocity = Vector2.Zero;
@@ -24,6 +25,7 @@ public class MoveComponent : Component
     public bool IsRunning = false;
     public bool OnGround = false;
     public bool IsFlying = false;
+    public bool IsBouncing = false;
 
     // Constructor
     public MoveComponent()
@@ -51,6 +53,16 @@ public class MoveComponent : Component
                     currentFallSpeed += EffectiveGravity;
 
                     Velocity = new Vector2(Velocity.X, currentFallSpeed);
+                }
+
+                if(bounceTimer > 0)
+                {
+                    bounceTimer -= Globals.DeltaTime;
+                }
+                else if(bounceTimer <= 0 && IsBouncing == true)
+                {
+                    bounceTimer = 0;
+                    IsBouncing = false;
                 }
             }
             else
@@ -125,6 +137,13 @@ public class MoveComponent : Component
         Velocity = new Vector2(Velocity.X, jumpVelocity);
         
         OnGround = false;
+    }
+
+    public void Bounce()
+    {
+        IsBouncing = true;
+        bounceTimer = 1f;
+        Jump();
     }
 
     public void OnCollision(object sender, CollisionEventArgs args) 
