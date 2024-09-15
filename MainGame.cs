@@ -15,10 +15,7 @@ public class MainGame : Game
 
     // Constants
     private const int VIRTUAL_WINDOW_WIDTH = 640;
-    private const int VIRTUAL_WINDOW_HEIGHT = 320;
-    private const int WINDOW_WIDTH = 1280;
-    private const int WINDOW_HEIGHT = 720;
-    
+    private const int VIRTUAL_WINDOW_HEIGHT = 320;  
 
     // Fields
     private Rectangle viewport;
@@ -51,7 +48,7 @@ public class MainGame : Game
         // TODO: Add your initialization logic here
         
         Globals.InitializeGlobals(Content);
-        Globals.GraphicsScreenSize = new Vector2(640, 320);
+        Globals.WindowSizeChanged += OnWindowSizeChanged;
 
         debugEnabled = new bool[] 
         {
@@ -64,15 +61,15 @@ public class MainGame : Game
         string tiledMapJson = File.ReadAllText("../../../Content/tiledMaps/debugStage2.json");
         _testTilemap = JsonConvert.DeserializeObject<TiledMap>(tiledMapJson);
 
-        _graphics.PreferredBackBufferWidth = WINDOW_WIDTH;
-        _graphics.PreferredBackBufferHeight = WINDOW_HEIGHT;
+        _graphics.PreferredBackBufferWidth = (int)Globals.WindowSize.X;
+        _graphics.PreferredBackBufferHeight = (int)Globals.WindowSize.Y;
         _graphics.SynchronizeWithVerticalRetrace = true;
         _graphics.ApplyChanges();
 
         renderTarget2D = new RenderTarget2D(
             GraphicsDevice,
-            640,
-            320,
+            VIRTUAL_WINDOW_WIDTH,
+            VIRTUAL_WINDOW_HEIGHT,
             false,
             GraphicsDevice.PresentationParameters.BackBufferFormat,
             DepthFormat.Depth24);
@@ -142,7 +139,7 @@ public class MainGame : Game
         }
         
         _camera = new Camera2D(_testPlayer, _testTilemap.Width * _testTilemap.TileWidth, _testTilemap.Height * _testTilemap.TileHeight);
-        _camera.SetViewportSize((int)Globals.GraphicsScreenSize.X, (int)Globals.GraphicsScreenSize.Y);
+        _camera.SetViewportSize((int)VIRTUAL_WINDOW_WIDTH, (int)VIRTUAL_WINDOW_HEIGHT);
 
         base.Initialize();
     }
@@ -156,14 +153,20 @@ public class MainGame : Game
     {
         Globals.Update(gameTime);
 
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-            Exit();
-
         if(Keyboard.GetState().IsKeyDown(Keys.LeftControl) && 
         Keyboard.GetState().IsKeyDown(Keys.LeftShift) && 
         Keyboard.GetState().IsKeyDown(Keys.OemTilde) &&
         !tildePressed) {
-            debugEnabled[0] = !debugEnabled[0];
+            //debugEnabled[0] = !debugEnabled[0];
+            _graphics.IsFullScreen = !_graphics.IsFullScreen;
+            tildePressed = true;
+        }
+
+        if(Keyboard.GetState().IsKeyDown(Keys.LeftControl) && 
+        Keyboard.GetState().IsKeyDown(Keys.LeftAlt) && 
+        Keyboard.GetState().IsKeyDown(Keys.OemTilde) &&
+        !tildePressed) {
+            Globals.DebugNextResolution();
             tildePressed = true;
         }
 
@@ -246,16 +249,16 @@ public class MainGame : Game
 
     protected void CalculateViewport()
     {
-        float scaleX = WINDOW_WIDTH / VIRTUAL_WINDOW_WIDTH;
-        float scaleY = WINDOW_HEIGHT / VIRTUAL_WINDOW_HEIGHT;
+        float scaleX = (float)Globals.WindowSize.X / (float)VIRTUAL_WINDOW_WIDTH;
+        float scaleY = (float)Globals.WindowSize.Y / (float)VIRTUAL_WINDOW_HEIGHT;
 
         float viewportScale = scaleX < scaleY ? scaleX : scaleY;
 
         int viewportWidth = (int)(VIRTUAL_WINDOW_WIDTH * viewportScale);
         int viewportHeight = (int)(VIRTUAL_WINDOW_HEIGHT * viewportScale);
 
-        int offsetX = WINDOW_WIDTH / 2 - viewportWidth / 2;
-        int offsetY = WINDOW_HEIGHT / 2 - viewportHeight / 2;
+        int offsetX = (int)Globals.WindowSize.X / 2 - viewportWidth / 2;
+        int offsetY = (int)Globals.WindowSize.Y / 2 - viewportHeight / 2;
 
         viewport = new Rectangle(offsetX, offsetY, viewportWidth, viewportHeight);
     }
@@ -278,5 +281,14 @@ public class MainGame : Game
                 break;
             }
         }
+    }
+
+    protected void OnWindowSizeChanged(object sender, EventArgs args)
+    {
+        _graphics.PreferredBackBufferWidth = (int)Globals.WindowSize.X;
+        _graphics.PreferredBackBufferHeight = (int)Globals.WindowSize.Y;
+        _graphics.ApplyChanges();
+
+        CalculateViewport();
     }
 }
