@@ -50,7 +50,7 @@ public static class Globals {
             new Vector2(2560, 1440)
         };
 
-        WindowSize = Resolutions[0];
+        WindowSize = Resolutions[7];
     }
 
     public static void Update(GameTime gameTime) {

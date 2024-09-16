@@ -110,7 +110,7 @@ public class MainGame : Game
                         {
                             case "PlayerSpawn" : 
                             {
-                                _testPlayer = new PlayerEntity(32, 48, o.X, o.Y, "textures/AdventurerSheet");
+                                _testPlayer = new PlayerEntity(32, 32, o.X, o.Y, "textures/sprites/PlayerCharacter");
                                 _testPlayer.PlayerKilled += OnPlayerDeath;
                                 break;
                             }

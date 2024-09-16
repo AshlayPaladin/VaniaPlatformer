@@ -85,6 +85,18 @@
 /processorParam:TextureFormat=Color
 /build:textures/MovingPlatform.png
 
+#begin textures/sprites/PlayerCharacter.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/sprites/PlayerCharacter.png
+
 #begin textures/TestEnemy.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -97,7 +109,7 @@
 /processorParam:TextureFormat=Color
 /build:textures/TestEnemy.png
 
-#begin textures/tilesets/TestTiles.png
+#begin textures/tilesets/GandalfHardcore Platformer Assets v2.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -107,7 +119,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:textures/tilesets/TestTiles.png
+/build:textures/tilesets/GandalfHardcore Platformer Assets v2.png
 
 #begin textures/Tralia.png
 /importer:TextureImporter

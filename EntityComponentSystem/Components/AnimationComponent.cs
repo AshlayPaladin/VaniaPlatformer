@@ -1,17 +1,41 @@
 using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace VaniaPlatformer.ECS;
 
-public class AnimationComponent : Component
+public class Animation
 {
-    // Enums
+    // Enum
     public enum Loop {
         None,
         FromBeginning,
         Reverse
     }
+
+    // Properties
+    public Guid ID { get; private set; }
+    public Rectangle FirstFrame { get; private set; }
+    public int Frames { get; private set; }
+    public float FrameTime { get; private set; }
+    public Loop LoopType { get; private set; }
+
+    public Animation(Rectangle firstFrame, int frames, float frameTime, Loop loopType = Loop.None)
+    {
+        this.ID = Guid.NewGuid();
+        this.FirstFrame = firstFrame;
+        this.FrameTime = frameTime;
+        this.Frames = frames;
+        this.LoopType = loopType;
+    }
+}
+
+public class AnimationComponent : Component
+{
+    // Enums
+    
 
     // Fields
     private int frameIndex;
@@ -22,85 +46,130 @@ public class AnimationComponent : Component
     private Vector2 firstFrameSize;
 
     // Properties
-    public Rectangle Frame = Rectangle.Empty;
     public Rectangle DestinationRectangle = Rectangle.Empty;
-    public int Frames = 0;
-    public float FrameTime = 0;
-    public Loop LoopType = Loop.None;
+    public Animation Animation;
+    public bool Paused { get; private set; }
 
     // Constructors
-    public AnimationComponent(SpriteComponent spriteComponent, Rectangle firstFrame, int frames, float frameTime, Loop loopType = Loop.None)
+    public AnimationComponent(Animation animation = null)
     {
-        this.Frame = firstFrame;
-        this.Frames = frames;
-        this.FrameTime = frameTime;
-        this.LoopType = loopType;
 
-        this.frameIndex = 0;
-        this.finalFrameIndex = Frames - 1;
-        this.frameTimer = FrameTime;
-        this.firstFramePosition = new Vector2(Frame.X, Frame.Y);
-        this.firstFrameSize = new Vector2(Frame.Width, Frame.Height);
+        if(animation != null)
+        {
+            this.Animation = animation;
+            Play(Animation);
+        }
+        else
+        {
+            Animation = null;
+            this.frameIndex = 0;
+            this.finalFrameIndex = 0;
+            this.frameTimer = 0f;
+            this.firstFramePosition = Vector2.Zero;
+            this.firstFrameSize = Vector2.Zero;
+            Pause();
+        }
 
-        spriteComponent.Origin = new Vector2(
-            Frame.Width / 2,
-            Frame.Height / 2
-        );
-
+        Paused = false;
         AnimationSystem.Register(this);
     }
 
     // Methods
     public override void Update() 
     {
-        if(frameTimer > 0) {
-            frameTimer -= Globals.DeltaTime;
-        }
-        else {
-            switch(LoopType) {
-                case Loop.FromBeginning:
-                {
-                    if(frameIndex == finalFrameIndex) {
-                        frameIndex = 0;
-                    }
-                    else {
-                        frameIndex++;
-                        frameTimer = FrameTime;
-                    }
-                    break;
-                }
-                case Loop.Reverse:
-                {
-                    if(frameIndex == finalFrameIndex && !isReverseAnimating) {
-                        isReverseAnimating = !isReverseAnimating;
-                        frameIndex--;
-                        frameTimer = FrameTime;
-                    }
-                    else if(frameIndex == 0 && isReverseAnimating) {
-                        isReverseAnimating = !isReverseAnimating;
-                        frameIndex++;
-                        frameTimer = FrameTime;
-                    }
-                    else {
-                        if(isReverseAnimating) {
-                            frameIndex--;
+        if(!Paused)
+        {
+            if(frameTimer > 0) {
+                frameTimer -= Globals.DeltaTime;
+            }
+            else {
+                switch(Animation.LoopType) {
+                    case Animation.Loop.FromBeginning:
+                    {
+                        if(frameIndex == finalFrameIndex) {
+                            frameIndex = 0;
+                            frameTimer = Animation.FrameTime;
                         }
                         else {
                             frameIndex++;
+                            frameTimer = Animation.FrameTime;
                         }
-
-                        frameTimer = FrameTime;
+                        break;
                     }
-                    break;
+                    case Animation.Loop.Reverse:
+                    {
+                        if(frameIndex == finalFrameIndex && !isReverseAnimating) {
+                            isReverseAnimating = !isReverseAnimating;
+                            frameIndex--;
+                            frameTimer = Animation.FrameTime;
+                        }
+                        else if(frameIndex == 0 && isReverseAnimating) {
+                            isReverseAnimating = !isReverseAnimating;
+                            frameIndex++;
+                            frameTimer = Animation.FrameTime;
+                        }
+                        else {
+                            if(isReverseAnimating) {
+                                frameIndex--;
+                            }
+                            else {
+                                frameIndex++;
+                            }
+
+                            frameTimer = Animation.FrameTime;
+                        }
+                        break;
+                    }
                 }
+
+                Entity.GetComponent<SpriteComponent>().SourceRectangle = new Rectangle(
+                    (int)(firstFramePosition.X + (firstFrameSize.X * frameIndex)),
+                    (int)firstFramePosition.Y,
+                    (int)firstFrameSize.X,
+                    (int)firstFrameSize.Y);
+
             }
+        }
+    }
+
+    public void Play(Animation animation) 
+    {
+        // Swap out Current Animation with New One
+        if(Animation != animation)
+        {
+            Animation = animation;
+
+            this.frameIndex = 0;
+            this.finalFrameIndex = animation.Frames - 1;
+            this.frameTimer = animation.FrameTime;
+            this.firstFramePosition = new Vector2(animation.FirstFrame.X, animation.FirstFrame.Y);
+            this.firstFrameSize = new Vector2(animation.FirstFrame.Width, animation.FirstFrame.Height);
 
             Entity.GetComponent<SpriteComponent>().SourceRectangle = new Rectangle(
-                (int)(firstFramePosition.X + (firstFrameSize.X * frameIndex)),
-                (int)firstFramePosition.Y,
-                (int)firstFrameSize.X,
-                (int)firstFrameSize.Y);
+                    (int)(firstFramePosition.X + (firstFrameSize.X * frameIndex)),
+                    (int)firstFramePosition.Y,
+                    (int)firstFrameSize.X,
+                    (int)firstFrameSize.Y);
 
+            Entity.GetComponent<SpriteComponent>().Origin = new Vector2(
+                animation.FirstFrame.Width / 2,
+                animation.FirstFrame.Height / 2
+            );
+
+            Paused = false;
         }
+        
+    }
+
+    public void Pause()
+    {
+        // Pause Animation
+        Paused = true;
+    }
+
+    public void Resume()
+    {
+        // Resume Animation
+        Paused = false;
     }
 }

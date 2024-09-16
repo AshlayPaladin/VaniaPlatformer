@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -18,7 +19,8 @@ public class PlayerEntity : GameActorEntity {
         Climbing
     }
 
-    // Constants
+    // Fields
+    private Dictionary<string, Animation> animations = new Dictionary<string, Animation>();
 
     // Events
     public event EventHandler HeadBonked;
@@ -37,11 +39,7 @@ public class PlayerEntity : GameActorEntity {
         );
 
         AddComponent(
-            new AnimationComponent(
-                GetComponent<SpriteComponent>(),
-                new Rectangle(50, 38, 50, 37),
-                6, 0.05f, AnimationComponent.Loop.Reverse
-            )
+            new AnimationComponent()
         );
 
         AddComponent(
@@ -54,6 +52,11 @@ public class PlayerEntity : GameActorEntity {
 
         // Set Defaults
         MovingState = MoveState.Normal;
+        animations.Add("Idle", new Animation(new Rectangle(0, 0, 32, 32), 2, 0.5f, Animation.Loop.FromBeginning));
+        animations.Add("Walk", new Animation(new Rectangle(0, 65, 32, 32), 4, 0.15f, Animation.Loop.FromBeginning));
+        animations.Add("Run", new Animation(new Rectangle(0, 97, 32, 32), 8, 0.05f, Animation.Loop.FromBeginning));
+
+        GetComponent<AnimationComponent>().Play(animations["Run"]);
 
         // Connect our ColliderComponent Collided event to the MoveComponent collision correction method
         GetComponent<ColliderComponent>().Collided += GetComponent<MoveComponent>().OnCollision;
@@ -93,6 +96,15 @@ public class PlayerEntity : GameActorEntity {
         // Check for LEFT input while not Climbing
         if(input.IsLeftKeyDown && MovingState != MoveState.Climbing) {
 
+            if(movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Run"])
+            {
+                GetComponent<AnimationComponent>().Play(animations["Run"]);
+            }
+            if(!movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Walk"])
+            {
+                GetComponent<AnimationComponent>().Play(animations["Walk"]);
+            }
+
             // If the following returns anything other than NULL, we are against a SolidEntity on our Left,
             // so we don't proceed with movement.
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider) != null)
@@ -121,6 +133,15 @@ public class PlayerEntity : GameActorEntity {
 
         // Check for RIGHT input while not Climbing
         if(input.IsRightKeyDown && MovingState != MoveState.Climbing) {
+
+            if(movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Run"])
+            {
+                GetComponent<AnimationComponent>().Play(animations["Run"]);
+            }
+            if(!movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Walk"])
+            {
+                GetComponent<AnimationComponent>().Play(animations["Walk"]);
+            }
 
             // If the ColliderSystem returns true, we are against a wall on our right already
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.RightCollider) != null) {
@@ -153,13 +174,19 @@ public class PlayerEntity : GameActorEntity {
         if(!input.IsLeftKeyDown && !input.IsRightKeyDown) {
             movement.Velocity = new Vector2(0, movement.Velocity.Y);
             movement.CurrentMoveSpeed = 0;
+
+            var anim = GetComponent<AnimationComponent>();
+            if(anim.Animation != animations["Idle"])
+            {
+                anim.Play(animations["Idle"]);
+            }
         }
 
         // Check for Jump Key
         if(input.IsJumpKeyDown) 
         {
             // If we are moving normally, the Jump key only works if we're on the ground
-            if(MovingState != MoveState.Normal && physics.OnGround) 
+            if(MovingState == MoveState.Normal && physics.OnGround) 
             {
                 physics.Jump();
             }
@@ -168,6 +195,7 @@ public class PlayerEntity : GameActorEntity {
             {
                 GetComponent<PhysicsComponent>().Enable();
                 physics.Jump();
+                physics.OnGround = false;
                 MovingState = MoveState.Normal;
             }
         }
