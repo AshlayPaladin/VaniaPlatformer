@@ -76,21 +76,25 @@ public class PlayerEntity : GameActorEntity {
         InputComponent input = GetComponent<InputComponent>();
         PhysicsComponent physics = GetComponent<PhysicsComponent>();
 
-        // Check for Input
+        // Update Movememnt maximums if we begin running
         if(input.IsRunKeyDown && !movement.IsRunning) {
             movement.MaxMoveSpeed *= 2f;
             movement.CurrentAcceleration *= 1.25f;
             movement.IsRunning = true;
         }
 
+        // Reset Movement maximums if we are no longer running
         if(!input.IsRunKeyDown && movement.IsRunning) {
             movement.MaxMoveSpeed = movement.BaseMoveSpeed;
             movement.CurrentAcceleration = movement.BaseAcceleration;
             movement.IsRunning = false;
         }
 
-        // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
+        // Check for LEFT input while not Climbing
         if(input.IsLeftKeyDown && MovingState != MoveState.Climbing) {
+
+            // If the following returns anything other than NULL, we are against a SolidEntity on our Left,
+            // so we don't proceed with movement.
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider) != null)
             {
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
@@ -115,6 +119,7 @@ public class PlayerEntity : GameActorEntity {
             }
         }
 
+        // Check for RIGHT input while not Climbing
         if(input.IsRightKeyDown && MovingState != MoveState.Climbing) {
 
             // If the ColliderSystem returns true, we are against a wall on our right already
@@ -143,18 +148,22 @@ public class PlayerEntity : GameActorEntity {
             }
         }
 
+        // If LEFT and RIGHT are both not being pressed, we stop horizontal velocity
+        // TODO: Update this with deceleration, rather than hard-setting Velocity to 0
         if(!input.IsLeftKeyDown && !input.IsRightKeyDown) {
             movement.Velocity = new Vector2(0, movement.Velocity.Y);
             movement.CurrentMoveSpeed = 0;
         }
 
-        // Check for Jump Key while On the Ground
+        // Check for Jump Key
         if(input.IsJumpKeyDown) 
         {
-            if(MovingState != MoveState.Climbing && physics.OnGround) 
+            // If we are moving normally, the Jump key only works if we're on the ground
+            if(MovingState != MoveState.Normal && physics.OnGround) 
             {
                 physics.Jump();
             }
+            // If we are climing, the Jump key always works and re-enables Physics, such as Gravity
             else if(MovingState == MoveState.Climbing)
             {
                 GetComponent<PhysicsComponent>().Enable();
@@ -163,7 +172,10 @@ public class PlayerEntity : GameActorEntity {
             }
         }
 
-        if((input.IsUpKeyDown || input.IsDownKeyDown) && ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider) != null && MovingState != MoveState.Climbing)
+        // Ladder Check -- Check for UP or DOWN input, any collision with a LadderEntity, and that we aren't already climbing
+        if((input.IsUpKeyDown || input.IsDownKeyDown) && 
+            ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider) != null && 
+            MovingState != MoveState.Climbing)
         {
             GetComponent<PhysicsComponent>().Disable();
             LadderEntity ladder = ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider);
@@ -176,16 +188,26 @@ public class PlayerEntity : GameActorEntity {
             MovingState = MoveState.Climbing;
         }
 
+        // While climbing, UP and DOWN slide us up and down the Ladder
         if(input.IsUpKeyDown && MovingState == MoveState.Climbing) 
         {
+
+            // TODO: We need to make sure that the player does not leave the LadderEntity while climbing
+            // This current check ONLY checks if are going to hit a solid and stops us if so, it does
+            // not prevent us from leaving the Ladder itself
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.TopCollider) == null)
             {
                 movement.Velocity = new Vector2(0, -(movement.BaseMoveSpeed * Globals.DeltaTime));
             }
         }
 
+        // While climbing, UP and DOWN slide us up and down the Ladder
         if(input.IsDownKeyDown && MovingState == MoveState.Climbing) 
         {
+
+            // TODO: We need to make sure that the player does not leave the LadderEntity while climbing
+            // This current check ONLY checks if are going to hit a solid and stops us if so, it does
+            // not prevent us from leaving the Ladder itself
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider) != null)
             {
                 GetComponent<PhysicsComponent>().Enable();
@@ -197,25 +219,35 @@ public class PlayerEntity : GameActorEntity {
             }
         }
 
+        // If we release UP and DOWN while on a Ladder, we need to reset the Velocity
         if(!input.IsDownKeyDown && !input.IsUpKeyDown && MovingState == MoveState.Climbing)
         {
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.TopCollider) == null)
-            {
-                movement.Velocity = Vector2.Zero;
-            }
+            movement.Velocity = Vector2.Zero;
         }
 
-        // End Jump Premature if Jump Key is Released before reaching max jump height
-        if(!input.IsJumpKeyDown && !physics.OnGround && movement.Velocity.Y < 0 && physics.IsBouncing == false && MovingState == MoveState.Normal) {
+        /*  End Jump Premature if Jump Key is Released before reaching max jump height
+            Requires the following:
+                - Jump key is NOT pressed
+                - Player is NOT on the ground
+                - Player Velocity shows UPWARD movement
+                - We are not bouncing (e.g. off an enemy head)
+                - Player MoveState is Normal
+        */  
+        if(!input.IsJumpKeyDown && 
+            !physics.OnGround && 
+            movement.Velocity.Y < 0 && 
+            physics.IsBouncing == false && 
+            MovingState == MoveState.Normal) {
             movement.Velocity = new Vector2(movement.Velocity.X, 0);
         }
 
-        // Move with Moving Platform
+        // Apply MovingPlatformEntity Velocity to our own, if we are standing on one
         var platformEntity = ColliderSystem.CheckForEntityCollision<MovingPlatformEntity>(collider.BottomCollider);
         if(platformEntity != null) {
-            // We are on a moving platform here
+            
             Vector2 platformVelocity = platformEntity.GetComponent<MoveComponent>().Velocity;
             movement.Velocity += platformVelocity;
+
         }
 
         // TODO: Adjust SpriteEffects and AnimationComponent based on Movement
@@ -224,15 +256,7 @@ public class PlayerEntity : GameActorEntity {
         GetComponent<AnimationComponent>().DestinationRectangle = GetComponent<ColliderComponent>().Collider;
     }
 
-    private void MoveAndSlide()
-    {
-
-    }
-
-    protected void OnHeadBonked() {
-        HeadBonked?.Invoke(this, null);
-    }
-
+    // Player-specific collision handling. Checks for EnemyEntity and handles damage
     protected override void OnCollision(object sender, CollisionEventArgs args) 
     {
         Entity entity = args.CollisionComponent.Entity;
@@ -258,6 +282,11 @@ public class PlayerEntity : GameActorEntity {
             }
             
         }
+    }
+
+    protected void OnHeadBonked() 
+    {
+        HeadBonked?.Invoke(this, null);
     }
 
     protected void OnKilled(object sender, EventArgs args)
