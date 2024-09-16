@@ -32,9 +32,6 @@ public class MoveComponent : Component
         TransformComponent transform = Entity.GetComponent<TransformComponent>();
         ColliderComponent collider = Entity.GetComponent<ColliderComponent>();
 
-        // Add Gravity to Falling, if we are in the air
-        
-
         // Collisions have been Handled, Falling Applied, Let's Apply Velocity
         if(Velocity.X != 0 || Velocity.Y != 0)
         {

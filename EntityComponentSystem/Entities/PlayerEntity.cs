@@ -11,10 +11,18 @@ public class PlayerEntity : GameActorEntity {
     // Events
     public event EventHandler PlayerKilled;
 
+    // Enums
+    public enum MoveState
+    {
+        Normal,
+        Climbing
+    }
+
     // Constants
 
     // Events
     public event EventHandler HeadBonked;
+    public MoveState MovingState;
 
     // Properties
 
@@ -22,6 +30,8 @@ public class PlayerEntity : GameActorEntity {
     public PlayerEntity(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0, string textureAssetId = "") 
         : base(collisionWidth, collisionHeight, startX, startY, textureAssetId)
     {
+
+        // Player-Specific Components
         AddComponent(
             new PhysicsComponent()
         );
@@ -41,6 +51,9 @@ public class PlayerEntity : GameActorEntity {
         AddComponent(
             new HealthComponent(3)
         );
+
+        // Set Defaults
+        MovingState = MoveState.Normal;
 
         // Connect our ColliderComponent Collided event to the MoveComponent collision correction method
         GetComponent<ColliderComponent>().Collided += GetComponent<MoveComponent>().OnCollision;
@@ -77,7 +90,7 @@ public class PlayerEntity : GameActorEntity {
         }
 
         // Check for Horizontal Key presses (A & D) and apply Horizontal Velocity, as needed
-        if(input.IsLeftKeyDown) {
+        if(input.IsLeftKeyDown && MovingState != MoveState.Climbing) {
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider) != null)
             {
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
@@ -102,7 +115,7 @@ public class PlayerEntity : GameActorEntity {
             }
         }
 
-        if(input.IsRightKeyDown) {
+        if(input.IsRightKeyDown && MovingState != MoveState.Climbing) {
 
             // If the ColliderSystem returns true, we are against a wall on our right already
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.RightCollider) != null) {
@@ -136,12 +149,64 @@ public class PlayerEntity : GameActorEntity {
         }
 
         // Check for Jump Key while On the Ground
-        if(input.IsJumpKeyDown && physics.OnGround) {
-            physics.Jump();
+        if(input.IsJumpKeyDown) 
+        {
+            if(MovingState != MoveState.Climbing && physics.OnGround) 
+            {
+                physics.Jump();
+            }
+            else if(MovingState == MoveState.Climbing)
+            {
+                GetComponent<PhysicsComponent>().Enable();
+                physics.Jump();
+                MovingState = MoveState.Normal;
+            }
+        }
+
+        if((input.IsUpKeyDown || input.IsDownKeyDown) && ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider) != null && MovingState != MoveState.Climbing)
+        {
+            GetComponent<PhysicsComponent>().Disable();
+            LadderEntity ladder = ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider);
+            movement.Velocity = Vector2.Zero;
+            GetComponent<TransformComponent>().Position = 
+                new Vector2(
+                    (int)ladder.GetComponent<TransformComponent>().Position.X, 
+                    GetComponent<TransformComponent>().Position.Y
+                );
+            MovingState = MoveState.Climbing;
+        }
+
+        if(input.IsUpKeyDown && MovingState == MoveState.Climbing) 
+        {
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.TopCollider) == null)
+            {
+                movement.Velocity = new Vector2(0, -(movement.BaseMoveSpeed * Globals.DeltaTime));
+            }
+        }
+
+        if(input.IsDownKeyDown && MovingState == MoveState.Climbing) 
+        {
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider) != null)
+            {
+                GetComponent<PhysicsComponent>().Enable();
+                MovingState = MoveState.Normal;
+            }
+            else
+            {
+                movement.Velocity = new Vector2(0, movement.BaseMoveSpeed * Globals.DeltaTime);
+            }
+        }
+
+        if(!input.IsDownKeyDown && !input.IsUpKeyDown && MovingState == MoveState.Climbing)
+        {
+            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.TopCollider) == null)
+            {
+                movement.Velocity = Vector2.Zero;
+            }
         }
 
         // End Jump Premature if Jump Key is Released before reaching max jump height
-        if(!input.IsJumpKeyDown && !physics.OnGround && movement.Velocity.Y < 0 && physics.IsBouncing == false) {
+        if(!input.IsJumpKeyDown && !physics.OnGround && movement.Velocity.Y < 0 && physics.IsBouncing == false && MovingState == MoveState.Normal) {
             movement.Velocity = new Vector2(movement.Velocity.X, 0);
         }
 
@@ -157,6 +222,11 @@ public class PlayerEntity : GameActorEntity {
 
         // Update the AnimationComponent's DestinationRectangle
         GetComponent<AnimationComponent>().DestinationRectangle = GetComponent<ColliderComponent>().Collider;
+    }
+
+    private void MoveAndSlide()
+    {
+
     }
 
     protected void OnHeadBonked() {

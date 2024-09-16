@@ -126,6 +126,11 @@ public class MainGame : Game
                                 actorEntities.Add(new MovingPlatformEntity(o.Width, o.Height, o.X, o.Y, "textures/MovingPlatform"));
                                 break;
                             }
+                            case "LadderActor":
+                            {
+                                entities.Add(new LadderEntity(o.Width, o.Height, o.X, o.Y));
+                                break;
+                            }
                             default:
                             {
                                 break;

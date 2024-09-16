@@ -17,7 +17,9 @@ public static class Globals {
     // Constants
     public const Keys LeftKey = Keys.A;
     public const Keys RightKey = Keys.D;
-    public const Keys JumpKey = Keys.W;
+    public const Keys UpKey = Keys.W;
+    public const Keys DownKey = Keys.S;
+    public const Keys JumpKey = Keys.Space;
     public const Keys RunKey = Keys.LeftShift;
 
     // Properties & Collections
