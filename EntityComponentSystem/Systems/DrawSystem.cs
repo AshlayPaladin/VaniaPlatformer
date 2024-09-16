@@ -9,7 +9,10 @@ public class DrawSystem : BaseSystem<SpriteComponent>
     public static void Draw(SpriteBatch spriteBatch) {
         
         foreach(SpriteComponent c in components) {
-            c.Draw(spriteBatch);
+            if(c.Enabled)
+            {
+                c.Draw(spriteBatch);
+            }
         }
         
     }

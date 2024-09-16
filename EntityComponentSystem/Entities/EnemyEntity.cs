@@ -33,8 +33,7 @@ public class EnemyEntity : GameActorEntity
 
     public void OnKilled(object sender, EventArgs args)
     {
+        Destroy();
         Killed?.Invoke(this, null);
-
-        Dispose();
     }
 }

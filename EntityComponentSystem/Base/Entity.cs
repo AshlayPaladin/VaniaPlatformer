@@ -35,4 +35,12 @@ public class Entity
 
         return null;
     }
+
+    public virtual void Destroy()
+    {
+        foreach(var component in Components) 
+        {
+            component.Destroy();
+        }
+    }
 }
