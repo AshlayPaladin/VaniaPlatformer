@@ -176,6 +176,7 @@ public class MainGame : Game
         
         InputSystem.Update();
         TransformSystem.Update();
+        PhysicsSystem.Update();
         MoveSystem.Update();
         ColliderSystem.Update();
         AnimationSystem.Update();

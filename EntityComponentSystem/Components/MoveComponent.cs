@@ -7,8 +7,7 @@ namespace VaniaPlatformer.ECS;
 public class MoveComponent : Component 
 {
     // Fields
-    private float coyoteTimer;
-    private float bounceTimer = 0f;
+    
 
     // Properties
     public Vector2 Velocity = Vector2.Zero;
@@ -16,22 +15,14 @@ public class MoveComponent : Component
     public float MinimumMoveSpeed = 16f;
     public float CurrentMoveSpeed = 0f;
     public float MaxMoveSpeed = 128.0f;
-    public float CoyoteTime = 0.15f;
     public float BaseAcceleration = 8f;
     public float CurrentAcceleration = 0f;
     public float JumpSpeed = 420.0f;
-    public float MaxFallSpeed = 128.0f;
-    public float EffectiveGravity = 0.35f;
     public bool IsRunning = false;
-    public bool OnGround = false;
-    public bool IsFlying = false;
-    public bool IsBouncing = false;
 
     // Constructor
     public MoveComponent()
     {
-        this.coyoteTimer = CoyoteTime;
-
         MoveSystem.Register(this);
     }
 
@@ -42,60 +33,7 @@ public class MoveComponent : Component
         ColliderComponent collider = Entity.GetComponent<ColliderComponent>();
 
         // Add Gravity to Falling, if we are in the air
-        if(!IsFlying)
-        {
-            if(!OnGround)
-            {
-                float currentFallSpeed = Velocity.Y;
-
-                if(currentFallSpeed < MaxFallSpeed)
-                {
-                    currentFallSpeed += EffectiveGravity;
-
-                    Velocity = new Vector2(Velocity.X, currentFallSpeed);
-                }
-
-                if(bounceTimer > 0)
-                {
-                    bounceTimer -= Globals.DeltaTime;
-                }
-                else if(bounceTimer <= 0 && IsBouncing == true)
-                {
-                    bounceTimer = 0;
-                    IsBouncing = false;
-                }
-            }
-            else
-            {
-                if(collider != null)
-                {
-                    if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider) == null)
-                    {
-                        // We're set as OnGround, but nothing is under us, Begin CoyoteTime!
-                        // Nothing below us, begin Coyote Time countdown before setting OnGround
-                        if(coyoteTimer > 0) {
-                            coyoteTimer -= Globals.DeltaTime;
-                        }
-                        else {
-                            OnGround = false;
-                            coyoteTimer = CoyoteTime;
-                        }
-
-                        // Begin falling immediately, but still be considered "onGround" so player can still jump
-                        float currentFallSpeed = Velocity.Y;
-
-                        if(currentFallSpeed < MaxFallSpeed) {
-                            currentFallSpeed += EffectiveGravity;
-
-                            Velocity = new Vector2(Velocity.X, currentFallSpeed);
-                        }
-                    }
-                    else {
-                        coyoteTimer = CoyoteTime;
-                    }
-                }
-            }
-        }
+        
 
         // Collisions have been Handled, Falling Applied, Let's Apply Velocity
         if(Velocity.X != 0 || Velocity.Y != 0)
@@ -128,22 +66,6 @@ public class MoveComponent : Component
                 }
             }
         }
-    }
-
-    public void Jump() 
-    {
-        float jumpVelocity = -(JumpSpeed * Globals.DeltaTime);
-
-        Velocity = new Vector2(Velocity.X, jumpVelocity);
-        
-        OnGround = false;
-    }
-
-    public void Bounce()
-    {
-        IsBouncing = true;
-        bounceTimer = 1f;
-        Jump();
     }
 
     public void OnCollision(object sender, CollisionEventArgs args) 
@@ -197,8 +119,11 @@ public class MoveComponent : Component
 
                             transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                            OnGround = true;
-
+                            if(Entity.GetComponent<PhysicsComponent>() != null)
+                            {
+                                Entity.GetComponent<PhysicsComponent>().OnGround = true;
+                            }
+                            
                             Velocity = new Vector2(Velocity.X, 0);
                         }
                     }
@@ -209,7 +134,10 @@ public class MoveComponent : Component
 
                         transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                        OnGround = true;
+                        if(Entity.GetComponent<PhysicsComponent>() != null)
+                        {
+                            Entity.GetComponent<PhysicsComponent>().OnGround = true;
+                        }
 
                         Velocity = new Vector2(Velocity.X, 0);
                     }
@@ -223,7 +151,10 @@ public class MoveComponent : Component
 
                         transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                        OnGround = false;
+                        if(Entity.GetComponent<PhysicsComponent>() != null)
+                        {
+                            Entity.GetComponent<PhysicsComponent>().OnGround = false;
+                        }
 
                         Velocity = new Vector2(Velocity.X, 0);
                     }

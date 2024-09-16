@@ -23,6 +23,10 @@ public class PlayerEntity : GameActorEntity {
         : base(collisionWidth, collisionHeight, startX, startY, textureAssetId)
     {
         AddComponent(
+            new PhysicsComponent()
+        );
+
+        AddComponent(
             new AnimationComponent(
                 GetComponent<SpriteComponent>(),
                 new Rectangle(50, 38, 50, 37),
@@ -57,6 +61,7 @@ public class PlayerEntity : GameActorEntity {
         MoveComponent movement = GetComponent<MoveComponent>();
         ColliderComponent collider = GetComponent<ColliderComponent>();
         InputComponent input = GetComponent<InputComponent>();
+        PhysicsComponent physics = GetComponent<PhysicsComponent>();
 
         // Check for Input
         if(input.IsRunKeyDown && !movement.IsRunning) {
@@ -131,12 +136,12 @@ public class PlayerEntity : GameActorEntity {
         }
 
         // Check for Jump Key while On the Ground
-        if(input.IsJumpKeyDown && movement.OnGround) {
-            movement.Jump();
+        if(input.IsJumpKeyDown && physics.OnGround) {
+            physics.Jump();
         }
 
         // End Jump Premature if Jump Key is Released before reaching max jump height
-        if(!input.IsJumpKeyDown && !movement.OnGround && movement.Velocity.Y < 0 && GetComponent<MoveComponent>().IsBouncing == false) {
+        if(!input.IsJumpKeyDown && !physics.OnGround && movement.Velocity.Y < 0 && physics.IsBouncing == false) {
             movement.Velocity = new Vector2(movement.Velocity.X, 0);
         }
 
@@ -173,8 +178,8 @@ public class PlayerEntity : GameActorEntity {
                 var enemy = entity as EnemyEntity;
                 enemy.GetComponent<HealthComponent>().Damage();
 
-                GetComponent<MoveComponent>().OnGround = true;
-                GetComponent<MoveComponent>().Bounce();
+                GetComponent<PhysicsComponent>().OnGround = true;
+                GetComponent<PhysicsComponent>().Bounce();
             }
             else
             {

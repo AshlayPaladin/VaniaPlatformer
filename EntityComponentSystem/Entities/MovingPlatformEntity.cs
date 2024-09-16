@@ -6,8 +6,11 @@ public class MovingPlatformEntity : GameActorEntity
     public MovingPlatformEntity(int collisionWidth, int collisionHeight, int startX = 0, int startY = 0, string textureAssetId = "")
         : base(collisionWidth, collisionHeight, startX, startY, textureAssetId)
     {
-        GetComponent<MoveComponent>().IsFlying = true;
+        AddComponent(
+            new PhysicsComponent()
+        );
 
+        GetComponent<PhysicsComponent>().IsFlying = true;
         GetComponent<ColliderComponent>().Collided += OnCollision;
     }
 }
