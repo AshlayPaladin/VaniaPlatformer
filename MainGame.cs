@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System;
 using VaniaPlatformer.ECS;
+using System.Linq;
 
 namespace VaniaPlatformer;
 
@@ -93,7 +94,49 @@ public class MainGame : Game
                             }
                             default:
                             {
-                                entities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height));
+                                TiledObjectProperty shapeProperty = o.Properties.Where(p => p.Name == "Collider Shape").Select(p => p).FirstOrDefault();
+
+                                switch(shapeProperty.Value)
+                                {
+                                    case "Triangle":
+                                    {
+                                        // Create a SolidEntity with a Triangle Collider
+                                        List<Vertex> vertices = new List<Vertex>(o.Polygon);
+                                        Triangle triangleCollider = new Triangle(
+                                            new Vector2(o.X, o.Y),
+                                            new Vector2(vertices[0].X, vertices[0].Y),
+                                            new Vector2(vertices[1].X, vertices[1].Y),
+                                            new Vector2(vertices[2].X, vertices[2].Y)
+                                        );
+
+                                        entities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height, triangleCollider));
+                                        break;
+                                    }
+                                    case "Circle":
+                                    {
+                                        // Create a SolidEntity with a Circle Collider
+                                        Circle circleCollider = new Circle(
+                                            new Vector2(o.X + o.Width / 2, o.Y + o.Height / 2), o.Width / 2);
+                                        entities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height, circleCollider));
+                                        break;
+                                    }
+                                    case "Capsule":
+                                    {
+                                        // Create a SolidEntity with a Capsule Collider
+                                        Capsule capsuleCollider = new Capsule(
+                                            new Vector2(o.X, o.Y),
+                                            o.Width, o.Height
+                                        );
+                                        entities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height, capsuleCollider));
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        // Create a SolidEntity with a Rectangle Collider
+                                        entities.Add(new SolidEntity(new Vector2(o.X, o.Y), o.Width, o.Height));
+                                        break;
+                                    }
+                                }
                                 break;
                             }
                         }

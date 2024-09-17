@@ -72,11 +72,7 @@ public class PlayerEntity : GameActorEntity {
 
     // Methods
     public void Draw(SpriteBatch spriteBatch) {
-        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().Collider, Color.Yellow * 0.5f);
-        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().BottomCollider, Color.Red * 0.5f);
-        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().LeftCollider, Color.Red * 0.5f);
-        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().RightCollider, Color.Red * 0.5f);
-        spriteBatch.Draw(Globals.DebugTexture, GetComponent<ColliderComponent>().TopCollider, Color.Red * 0.5f);
+        spriteBatch.Draw(Globals.DebugTexture, (Rectangle)GetComponent<ColliderComponent>().BoxCollider, Color.Yellow * 0.5f);
     }
 
     public override void Update() {
@@ -113,7 +109,7 @@ public class PlayerEntity : GameActorEntity {
 
             // If the following returns anything other than NULL, we are against a SolidEntity on our Left,
             // so we don't proceed with movement.
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.LeftCollider) != null)
+            if(ColliderSystem.CheckForEntityCollisions<SolidEntity>().Correction != Vector2.Zero)
             {
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
                 movement.CurrentMoveSpeed = 0;
@@ -150,7 +146,7 @@ public class PlayerEntity : GameActorEntity {
             }
 
             // If the ColliderSystem returns true, we are against a wall on our right already
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.RightCollider) != null) {
+            if(ColliderSystem.CheckForEntityCollisions<SolidEntity>().Correction != Vector2.Zero) {
                 // Set horizontal velocity to 0, we will not move if there is a wall in our way
                 movement.Velocity = new Vector2(0, movement.Velocity.Y);
                 movement.CurrentMoveSpeed = 0;
@@ -208,11 +204,11 @@ public class PlayerEntity : GameActorEntity {
 
         // Ladder Check -- Check for UP or DOWN input, any collision with a LadderEntity, and that we aren't already climbing
         if((input.IsUpKeyDown || input.IsDownKeyDown) && 
-            ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider) != null && 
+            ColliderSystem.CheckForEntityCollisions<LadderEntity>().Correction != Vector2.Zero && 
             MovingState != MoveState.Climbing)
         {
             GetComponent<RigidBodyComponent>().Disable();
-            LadderEntity ladder = ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider);
+            LadderEntity ladder = (LadderEntity)ColliderSystem.CheckForEntityCollisions<LadderEntity>().OtherEntity;
             movement.Velocity = Vector2.Zero;
             GetComponent<TransformComponent>().Position = 
                 new Vector2(
@@ -229,7 +225,7 @@ public class PlayerEntity : GameActorEntity {
             // TODO: We need to make sure that the player does not leave the LadderEntity while climbing
             // This current check ONLY checks if are going to hit a solid and stops us if so, it does
             // not prevent us from leaving the Ladder itself
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.TopCollider) == null)
+            if(ColliderSystem.CheckForEntityCollisions<SolidEntity>().Correction == Vector2.Zero)
             {
                 movement.Velocity = new Vector2(0, -(movement.BaseMoveSpeed * Globals.DeltaTime));
             }
@@ -242,7 +238,7 @@ public class PlayerEntity : GameActorEntity {
             // TODO: We need to make sure that the player does not leave the LadderEntity while climbing
             // This current check ONLY checks if are going to hit a solid and stops us if so, it does
             // not prevent us from leaving the Ladder itself
-            if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider) != null)
+            if(ColliderSystem.CheckForEntityCollisions<SolidEntity>().Correction != Vector2.Zero)
             {
                 GetComponent<RigidBodyComponent>().Enable();
                 MovingState = MoveState.Normal;
@@ -276,12 +272,11 @@ public class PlayerEntity : GameActorEntity {
         }
 
         // Apply MovingPlatformEntity Velocity to our own, if we are standing on one
-        var platformEntity = ColliderSystem.CheckForEntityCollision<MovingPlatformEntity>(collider.BottomCollider);
+        var platformEntity = (MovingPlatformEntity)ColliderSystem.CheckForEntityCollisions<MovingPlatformEntity>().OtherEntity;
         if(platformEntity != null) {
             
             Vector2 platformVelocity = platformEntity.GetComponent<MovementComponent>().Velocity;
             movement.Velocity += platformVelocity;
-
         }
 
         // TODO: Adjust SpriteEffects and AnimationComponent based on Movement

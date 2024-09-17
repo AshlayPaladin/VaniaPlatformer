@@ -5,89 +5,72 @@ namespace VaniaPlatformer.ECS;
 
 public class ColliderComponent : Component {
 
+    // Enum
+    public enum ColliderShape
+    {
+        Box,
+        Circle,
+        Triangle,
+        Capsule
+    }
+
+    public enum CollisionSide
+    {
+        Top,
+        Bottom,
+        Left,
+        Right,
+        None
+    }
+
     // Events
     public event EventHandler<CollisionEventArgs> Collided;
 
-    // Fields
-    private Vector2 colliderPosition;
-    private Vector2 colliderSize;
-
     // Properties
-    public Rectangle Collider;
-    public Rectangle BottomCollider { get; private set; }
-    public Rectangle TopCollider { get; private set; }
-    public Rectangle LeftCollider { get; private set; }
-    public Rectangle RightCollider { get; private set; }
+    public ColliderShape Shape { get; private set; }
+    public Rectangle BoxCollider;
+    public Circle CircleCollider;
+    public Triangle TriangleCollider;
+    public Capsule CapsuleCollider;
+    public Vector2 Correction;
 
     // Constructor
     public ColliderComponent(Rectangle collider) 
     {
-        Collider = collider;
-        OnColliderChanged();
+        Shape = ColliderShape.Box;
+        BoxCollider = collider;
+        Correction = Vector2.Zero;
 
         ColliderSystem.Register(this);
     }
 
-    // Methods
-    public override void Update()
+    public ColliderComponent(Circle collider)
     {
-        if(Collider.X != colliderPosition.X || 
-            Collider.Y != colliderPosition.Y ||
-            Collider.Width != colliderSize.X ||
-            Collider.Height != colliderSize.Y)
-        {
-            OnColliderChanged();
-        }
+        Shape = ColliderShape.Circle;
+        CircleCollider = collider;
+        Correction = Vector2.Zero;
+
+        ColliderSystem.Register(this);
     }
 
-    public void Intersects(ColliderComponent component)
+    // Triangle Collider is a unique situation where we need both a Triangle and Box collider so we can snap
+    // entities to the slope, if needed
+    public ColliderComponent(Triangle collider, Rectangle boxCollider)
     {
-        Rectangle collision = Rectangle.Intersect(Collider, component.Collider);
+        Shape = ColliderShape.Triangle;
+        TriangleCollider = collider;
+        BoxCollider = boxCollider;
+        Correction = Vector2.Zero;
 
-        if(collision != Rectangle.Empty) 
-        {
-            this.OnCollision(component, collision);
-        }
+        ColliderSystem.Register(this);
     }
 
-    public void OnCollision(ColliderComponent component, Rectangle collision) 
+    public ColliderComponent(Capsule collider)
     {
-        component.Collided?.Invoke(this, new CollisionEventArgs(this, collision));
-        Collided?.Invoke(this, new CollisionEventArgs(component, collision));
-    }
+        Shape = ColliderShape.Capsule;
+        CapsuleCollider = collider;
+        Correction = Vector2.Zero;
 
-    public void OnColliderChanged() 
-    {
-        colliderPosition = new Vector2(Collider.X, Collider.Y);
-        colliderSize = new Vector2(Collider.Width, Collider.Height);
-        SetSurroundingColliders();
-    }
-
-    private void SetSurroundingColliders() {
-
-        BottomCollider = new Rectangle(
-            (int)Collider.Left,
-            (int)Collider.Bottom,
-            Collider.Width,
-            1);
-
-        TopCollider = new Rectangle(
-            (int)Collider.Left,
-            (int)Collider.Top - 1,
-            Collider.Width,
-            1);
-        
-        LeftCollider = new Rectangle(
-            (int)Collider.Left - 1, 
-            (int)Collider.Top + 8, 
-            1, 
-            Collider.Height - 16);
-
-        RightCollider = new Rectangle(
-            (int)Collider.Right,
-            (int)Collider.Top + 8,
-            1,
-            Collider.Height - 16
-        );
+        ColliderSystem.Register(this);
     }
 }
