@@ -34,7 +34,7 @@ public class PlayerEntity : GameActorEntity {
 
         // Player-Specific Components
         AddComponent(
-            new PhysicsComponent()
+            new RigidBodyComponent()
         );
 
         AddComponent(
@@ -51,14 +51,21 @@ public class PlayerEntity : GameActorEntity {
 
         // Set Defaults
         MovingState = MoveState.Normal;
-        animations.Add("Idle", new Animation(new Rectangle(0, 0, 32, 32), 2, 0.5f, Animation.Loop.FromBeginning));
-        animations.Add("Walk", new Animation(new Rectangle(0, 65, 32, 32), 4, 0.15f, Animation.Loop.FromBeginning));
-        animations.Add("Run", new Animation(new Rectangle(0, 97, 32, 32), 8, 0.05f, Animation.Loop.FromBeginning));
 
-        GetComponent<AnimationComponent>().Play(animations["Run"]);
+        GetComponent<AnimationComponent>().Animations.Add(
+            new Animation("Idle", new Rectangle(0, 0, 32, 32), 2, 0.5f, Animation.Loop.FromBeginning)
+        );
 
-        // Connect our ColliderComponent Collided event to the MoveComponent collision correction method
-        GetComponent<ColliderComponent>().Collided += GetComponent<MoveComponent>().OnCollision;
+        GetComponent<AnimationComponent>().Animations.Add(
+            new Animation("Walk", new Rectangle(0, 65, 32, 32), 4, 0.15f, Animation.Loop.FromBeginning)
+        );
+
+        GetComponent<AnimationComponent>().Animations.Add(
+            new Animation("Run", new Rectangle(0, 97, 32, 32), 8, 0.05f, Animation.Loop.FromBeginning)
+        );
+
+        // Connect our ColliderComponent Collided event to the MovementComponent collision correction method
+        GetComponent<ColliderComponent>().Collided += GetComponent<MovementComponent>().OnCollision;
         GetComponent<ColliderComponent>().Collided += OnCollision;
         GetComponent<HealthComponent>().Killed += OnKilled;
     }
@@ -73,10 +80,10 @@ public class PlayerEntity : GameActorEntity {
     }
 
     public override void Update() {
-        MoveComponent movement = GetComponent<MoveComponent>();
+        MovementComponent movement = GetComponent<MovementComponent>();
         ColliderComponent collider = GetComponent<ColliderComponent>();
         InputComponent input = GetComponent<InputComponent>();
-        PhysicsComponent physics = GetComponent<PhysicsComponent>();
+        RigidBodyComponent physics = GetComponent<RigidBodyComponent>();
 
         // Update Movememnt maximums if we begin running
         if(input.IsRunKeyDown && !movement.IsRunning) {
@@ -97,11 +104,11 @@ public class PlayerEntity : GameActorEntity {
 
             if(movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Run"])
             {
-                GetComponent<AnimationComponent>().Play(animations["Run"]);
+                AnimationSystem.Play(this, "Run");
             }
             if(!movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Walk"])
             {
-                GetComponent<AnimationComponent>().Play(animations["Walk"]);
+                AnimationSystem.Play(this, "Walk");
             }
 
             // If the following returns anything other than NULL, we are against a SolidEntity on our Left,
@@ -135,11 +142,11 @@ public class PlayerEntity : GameActorEntity {
 
             if(movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Run"])
             {
-                GetComponent<AnimationComponent>().Play(animations["Run"]);
+                AnimationSystem.Play(this, "Run");
             }
             if(!movement.IsRunning && GetComponent<AnimationComponent>().Animation != animations["Walk"])
             {
-                GetComponent<AnimationComponent>().Play(animations["Walk"]);
+                AnimationSystem.Play(this, "Walk");
             }
 
             // If the ColliderSystem returns true, we are against a wall on our right already
@@ -175,9 +182,9 @@ public class PlayerEntity : GameActorEntity {
             movement.CurrentMoveSpeed = 0;
 
             var anim = GetComponent<AnimationComponent>();
-            if(anim.Animation != animations["Idle"])
+            if(anim.Animation.Name != "Idle")
             {
-                anim.Play(animations["Idle"]);
+                AnimationSystem.Play(this, "Idle");
             }
         }
 
@@ -192,7 +199,7 @@ public class PlayerEntity : GameActorEntity {
             // If we are climing, the Jump key always works and re-enables Physics, such as Gravity
             else if(MovingState == MoveState.Climbing)
             {
-                GetComponent<PhysicsComponent>().Enable();
+                GetComponent<RigidBodyComponent>().Enable();
                 physics.Jump();
                 physics.OnGround = false;
                 MovingState = MoveState.Normal;
@@ -204,7 +211,7 @@ public class PlayerEntity : GameActorEntity {
             ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider) != null && 
             MovingState != MoveState.Climbing)
         {
-            GetComponent<PhysicsComponent>().Disable();
+            GetComponent<RigidBodyComponent>().Disable();
             LadderEntity ladder = ColliderSystem.CheckForEntityCollision<LadderEntity>(collider.Collider);
             movement.Velocity = Vector2.Zero;
             GetComponent<TransformComponent>().Position = 
@@ -237,7 +244,7 @@ public class PlayerEntity : GameActorEntity {
             // not prevent us from leaving the Ladder itself
             if(ColliderSystem.CheckForEntityCollision<SolidEntity>(collider.BottomCollider) != null)
             {
-                GetComponent<PhysicsComponent>().Enable();
+                GetComponent<RigidBodyComponent>().Enable();
                 MovingState = MoveState.Normal;
             }
             else
@@ -272,7 +279,7 @@ public class PlayerEntity : GameActorEntity {
         var platformEntity = ColliderSystem.CheckForEntityCollision<MovingPlatformEntity>(collider.BottomCollider);
         if(platformEntity != null) {
             
-            Vector2 platformVelocity = platformEntity.GetComponent<MoveComponent>().Velocity;
+            Vector2 platformVelocity = platformEntity.GetComponent<MovementComponent>().Velocity;
             movement.Velocity += platformVelocity;
 
         }
@@ -299,8 +306,8 @@ public class PlayerEntity : GameActorEntity {
                 var enemy = entity as EnemyEntity;
                 enemy.GetComponent<HealthComponent>().Damage();
 
-                GetComponent<PhysicsComponent>().OnGround = true;
-                GetComponent<PhysicsComponent>().Bounce();
+                GetComponent<RigidBodyComponent>().OnGround = true;
+                GetComponent<RigidBodyComponent>().Bounce();
             }
             else
             {

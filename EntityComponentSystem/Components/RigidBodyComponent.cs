@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace VaniaPlatformer.ECS;
 
-public class PhysicsComponent : Component
+public class RigidBodyComponent : Component
 {
     // Fields
     private float coyoteTimer;
@@ -17,7 +17,7 @@ public class PhysicsComponent : Component
     public bool IsBouncing = false;
 
     // Constructor
-    public PhysicsComponent()
+    public RigidBodyComponent()
     {
         this.coyoteTimer = CoyoteTime;
 
@@ -28,7 +28,7 @@ public class PhysicsComponent : Component
     public override void Update()
     {
         ColliderComponent collider = Entity.GetComponent<ColliderComponent>();
-        MoveComponent movement = Entity.GetComponent<MoveComponent>();
+        MovementComponent movement = Entity.GetComponent<MovementComponent>();
 
         if(!IsFlying)
         {
@@ -88,9 +88,9 @@ public class PhysicsComponent : Component
 
         public void Jump() 
     {
-        float jumpVelocity = -(Entity.GetComponent<MoveComponent>().JumpSpeed * Globals.DeltaTime);
+        float jumpVelocity = -(Entity.GetComponent<MovementComponent>().JumpSpeed * Globals.DeltaTime);
 
-        Entity.GetComponent<MoveComponent>().Velocity = new Vector2(Entity.GetComponent<MoveComponent>().Velocity.X, jumpVelocity);
+        Entity.GetComponent<MovementComponent>().Velocity = new Vector2(Entity.GetComponent<MovementComponent>().Velocity.X, jumpVelocity);
         
         OnGround = false;
     }

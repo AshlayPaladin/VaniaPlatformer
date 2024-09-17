@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace VaniaPlatformer.ECS;
 
-public class MoveComponent : Component 
+public class MovementComponent : Component 
 {
     // Fields
     
@@ -21,7 +21,7 @@ public class MoveComponent : Component
     public bool IsRunning = false;
 
     // Constructor
-    public MoveComponent()
+    public MovementComponent()
     {
         MoveSystem.Register(this);
     }
@@ -116,9 +116,9 @@ public class MoveComponent : Component
 
                             transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                            if(Entity.GetComponent<PhysicsComponent>() != null)
+                            if(Entity.GetComponent<RigidBodyComponent>() != null)
                             {
-                                Entity.GetComponent<PhysicsComponent>().OnGround = true;
+                                Entity.GetComponent<RigidBodyComponent>().OnGround = true;
                             }
                             
                             Velocity = new Vector2(Velocity.X, 0);
@@ -131,9 +131,9 @@ public class MoveComponent : Component
 
                         transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                        if(Entity.GetComponent<PhysicsComponent>() != null)
+                        if(Entity.GetComponent<RigidBodyComponent>() != null)
                         {
-                            Entity.GetComponent<PhysicsComponent>().OnGround = true;
+                            Entity.GetComponent<RigidBodyComponent>().OnGround = true;
                         }
 
                         Velocity = new Vector2(Velocity.X, 0);
@@ -148,9 +148,9 @@ public class MoveComponent : Component
 
                         transform.Position = new Vector2(transform.Position.X, collisionProposedY);
 
-                        if(Entity.GetComponent<PhysicsComponent>() != null)
+                        if(Entity.GetComponent<RigidBodyComponent>() != null)
                         {
-                            Entity.GetComponent<PhysicsComponent>().OnGround = false;
+                            Entity.GetComponent<RigidBodyComponent>().OnGround = false;
                         }
 
                         Velocity = new Vector2(Velocity.X, 0);

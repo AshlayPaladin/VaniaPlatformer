@@ -18,7 +18,7 @@ public class EnemyEntity : GameActorEntity
         );
 
         GetComponent<HealthComponent>().Killed += OnKilled;
-        GetComponent<ColliderComponent>().Collided += GetComponent<MoveComponent>().OnCollision;
+        GetComponent<ColliderComponent>().Collided += GetComponent<MovementComponent>().OnCollision;
         GetComponent<ColliderComponent>().Collided += OnCollision;
     }
 

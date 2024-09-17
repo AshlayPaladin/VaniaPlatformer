@@ -13,6 +13,5 @@ public class DrawSystem : BaseSystem<SpriteComponent>
                 c.Draw(spriteBatch);
             }
         }
-        
     }
 }

@@ -48,14 +48,14 @@ public class GameActorEntity : Entity
         );
 
         AddComponent(
-            new MoveComponent()
+            new MovementComponent()
         );
     }
 
     // Methods
     public virtual void Update() 
     { 
-        var movement = GetComponent<MoveComponent>();
+        var movement = GetComponent<MovementComponent>();
 
         if(movement.CurrentMoveSpeed > 0) 
         {
